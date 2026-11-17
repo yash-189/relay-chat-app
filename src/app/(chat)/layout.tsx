@@ -1,0 +1,21 @@
+import { site } from "@/lib/site";
+import { ChatShell } from "@/ui/components/layout/ChatShell";
+import { ThemeToggle } from "@/ui/components/theme/ThemeToggle";
+
+export default function ChatLayout({ children }: LayoutProps<"/">) {
+  return (
+    <ChatShell
+      sidebar={
+        <>
+          <header className="flex h-14 shrink-0 items-center justify-between border-b px-4">
+            <span className="font-semibold">{site.name}</span>
+            <ThemeToggle />
+          </header>
+          <div className="min-h-0 flex-1 overflow-y-auto" />
+        </>
+      }
+    >
+      {children}
+    </ChatShell>
+  );
+}

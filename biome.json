@@ -60,8 +60,13 @@
               "options": {
                 "patterns": [
                   {
-                    "group": ["@/features/**", "@/providers/**", "@/app/**"],
-                    "message": "ui/, lib/ and shared/ sit below features and must not import them."
+                    "group": [
+                      "@/features/**",
+                      "@/providers/**",
+                      "@/app/**",
+                      "@/store/**"
+                    ],
+                    "message": "ui/, lib/ and shared/ sit below features and must not import them or the store."
                   }
                 ]
               }
