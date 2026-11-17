@@ -32,7 +32,23 @@
                 "group": ["@/features/*/*"],
                 "message": "Import another feature through its index.ts (@/features/<name>), not its internals."
               }
-            ]
+            ],
+            "paths": {
+              "sonner": "Import toast from @/lib/toast so the library stays swappable."
+            }
+          }
+        },
+        "noNestedTernary": "error"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "error"
+      },
+      "nursery": {
+        "useSortedClasses": {
+          "level": "error",
+          "fix": "safe",
+          "options": {
+            "functions": ["cn", "cva"]
           }
         }
       }
@@ -68,7 +84,10 @@
                     ],
                     "message": "ui/, lib/ and shared/ sit below features and must not import them or the store."
                   }
-                ]
+                ],
+                "paths": {
+                  "sonner": "Import toast from @/lib/toast so the library stays swappable."
+                }
               }
             }
           }
@@ -101,6 +120,25 @@
         "rules": {
           "a11y": {
             "noLabelWithoutControl": "off"
+          },
+          "style": {
+            "noNestedTernary": "off"
+          },
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "nursery": {
+            "useSortedClasses": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/toast.ts", "src/ui/primitives/sonner.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
           }
         }
       }
