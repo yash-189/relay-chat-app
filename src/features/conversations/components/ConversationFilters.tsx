@@ -25,7 +25,7 @@ export function ConversationFilters({
         <TabsTrigger value="unread" className="gap-1.5">
           <span>Unread</span>
           {typeof unreadCount === "number" && unreadCount > 0 && (
-            <span className="flex size-4 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
+            <span className="flex size-4 items-center justify-center rounded-full bg-primary/10 font-medium text-primary text-xs">
               {unreadCount}
             </span>
           )}

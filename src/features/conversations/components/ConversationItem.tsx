@@ -14,7 +14,11 @@ import {
 import { Badge } from "@/ui/primitives/badge";
 import { CURRENT_USER_ID } from "../api";
 import type { Conversation } from "../types";
-import { formatLastMessageTime, getInitials } from "../utils";
+import {
+  formatConversationPreview,
+  formatLastMessageTime,
+  getInitials,
+} from "../utils";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -33,13 +37,10 @@ export function ConversationItem({
     (params?.id === conversation.id ||
       pathname === Routes.chat(conversation.id));
 
-  let previewText = "";
-  if (conversation.lastMessage) {
-    const isOwn = conversation.lastMessage.senderId === CURRENT_USER_ID;
-    previewText = isOwn
-      ? `You: ${conversation.lastMessage.text}`
-      : conversation.lastMessage.text;
-  }
+  const previewText = formatConversationPreview(
+    conversation.lastMessage,
+    CURRENT_USER_ID,
+  );
 
   const unreadLabel =
     conversation.unreadCount === 1
@@ -60,7 +61,7 @@ export function ConversationItem({
         <AvatarFallback>{getInitials(conversation.name)}</AvatarFallback>
         {conversation.type === "direct" && conversation.isOnline && (
           <AvatarBadge
-            className="bg-emerald-500 ring-background"
+            className="bg-online ring-background"
             aria-label="Online"
             title="Online"
           />
@@ -77,14 +78,14 @@ export function ConversationItem({
                 data-testid="group-icon"
               />
             )}
-            <span className="truncate text-sm font-medium text-foreground">
+            <span className="truncate font-medium text-foreground text-sm">
               {conversation.name}
             </span>
           </div>
           {conversation.lastMessage && (
             <time
               dateTime={conversation.lastMessage.createdAt}
-              className="shrink-0 text-xs text-muted-foreground"
+              className="shrink-0 text-muted-foreground text-xs"
             >
               {formatLastMessageTime(conversation.lastMessage.createdAt)}
             </time>
@@ -92,13 +93,13 @@ export function ConversationItem({
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="min-h-4.5 truncate text-xs text-muted-foreground">
+          <p className="min-h-4.5 truncate text-muted-foreground text-xs">
             {previewText}
           </p>
           {conversation.unreadCount > 0 && (
             <Badge
               variant="default"
-              className="h-4.5 min-w-4.5 rounded-full px-1.5 text-xs font-semibold"
+              className="h-4.5 min-w-4.5 rounded-full px-1.5 font-semibold text-xs"
               aria-label={unreadLabel}
             >
               {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}

@@ -26,7 +26,7 @@ export function ConversationSearch({
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search conversations..."
         aria-label="Search conversations"
-        className="h-9 pl-8 pr-8 text-sm"
+        className="h-9 pr-8 pl-8 text-sm"
       />
       {value.length > 0 && (
         <Button

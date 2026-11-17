@@ -3,10 +3,19 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { markAsRead, onNewMessage, onPresenceChange } from "../api";
+import {
+  markAsRead,
+  onMessageUpdated,
+  onNewMessage,
+  onPresenceChange,
+} from "../api";
 import { conversationKeys, conversationQueries } from "../queries";
 import type { Conversation } from "../types";
-import { applyIncomingMessage, applyPresenceChange } from "../utils";
+import {
+  applyIncomingMessage,
+  applyPresenceChange,
+  applyUpdatedMessage,
+} from "../utils";
 import { useMarkAsRead } from "./useMarkAsRead";
 
 // loads the list and keeps it live: new messages and online status update the cache
@@ -39,6 +48,16 @@ export function useConversations() {
       );
     });
 
+    const unsubUpdated = onMessageUpdated((message) => {
+      queryClient.setQueryData<Conversation[]>(
+        conversationKeys.lists(),
+        (old) => {
+          if (!old) return old;
+          return applyUpdatedMessage(old, message);
+        },
+      );
+    });
+
     const unsubPresence = onPresenceChange((event) => {
       queryClient.setQueryData<Conversation[]>(
         conversationKeys.lists(),
@@ -51,6 +70,7 @@ export function useConversations() {
 
     return () => {
       unsubMessage();
+      unsubUpdated();
       unsubPresence();
     };
   }, [queryClient]);

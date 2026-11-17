@@ -18,7 +18,6 @@ export { CURRENT_USER_ID };
 function mapReaction(r: MockReaction): MessageReaction {
   return {
     emoji: r.emoji,
-    count: r.count,
     userIds: [...r.userIds],
   };
 }
@@ -64,7 +63,13 @@ export async function markAsRead(
 }
 
 export function onNewMessage(handler: (message: Message) => void) {
-  return mockSubscribe("message:new", (message) =>
+  return mockSubscribe("message:new", (message: MockMessage) =>
+    handler(mapMessage(message)),
+  );
+}
+
+export function onMessageUpdated(handler: (message: Message) => void) {
+  return mockSubscribe("message:updated", (message: MockMessage) =>
     handler(mapMessage(message)),
   );
 }

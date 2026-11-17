@@ -1,5 +1,5 @@
+export { ChatScreen } from "./components/ChatScreen";
 export {
   ConversationList,
   ConversationListSkeleton,
 } from "./components/ConversationList";
-export type { Conversation, ConversationType } from "./types";

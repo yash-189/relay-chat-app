@@ -73,6 +73,25 @@ describe("ConversationItem", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders deleted message copy when last message was deleted", () => {
+    const deletedConversation: Conversation = {
+      ...baseConversation,
+      lastMessage: {
+        id: "msg-del",
+        conversationId: "conv-1",
+        senderId: "user-2",
+        text: "",
+        createdAt: new Date().toISOString(),
+        status: "delivered",
+        deletedAt: new Date().toISOString(),
+      },
+    };
+
+    render(<ConversationItem conversation={deletedConversation} />);
+
+    expect(screen.getByText("This message was deleted")).toBeInTheDocument();
+  });
+
   it("renders group icon for group conversations", () => {
     const groupConversation: Conversation = {
       ...baseConversation,

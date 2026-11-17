@@ -6,9 +6,21 @@ import { Skeleton } from "@/ui/primitives/skeleton";
 import { filterConversations } from "../filters";
 import { useConversationFilters } from "../hooks/useConversationFilters";
 import { useConversations } from "../hooks/useConversations";
+import type { Conversation, ConversationFilter } from "../types";
 import { ConversationFilters } from "./ConversationFilters";
 import { ConversationItem } from "./ConversationItem";
 import { ConversationSearch } from "./ConversationSearch";
+
+const EMPTY_FILTER_MESSAGES = {
+  all: "No conversations yet.",
+  unread: "You're all caught up.",
+  groups: "No group conversations yet.",
+} satisfies Record<ConversationFilter, string>;
+
+function getNoResultsMessage(query: string, filter: ConversationFilter) {
+  if (query) return `No chats match "${query}".`;
+  return EMPTY_FILTER_MESSAGES[filter];
+}
 
 export function ConversationListSkeleton() {
   return (
@@ -28,6 +40,82 @@ export function ConversationListSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+interface ConversationListContentProps {
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  conversations: Conversation[];
+  filtered: Conversation[];
+  search: string;
+  filter: ConversationFilter;
+  onRetry: () => void;
+}
+
+function ConversationListContent({
+  isLoading,
+  isError,
+  error,
+  conversations,
+  filtered,
+  search,
+  filter,
+  onRetry,
+}: ConversationListContentProps) {
+  if (isLoading) {
+    return <ConversationListSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title="Failed to load conversations"
+          description={
+            error?.message || "Please check your connection and try again."
+          }
+          onRetry={onRetry}
+        />
+      </div>
+    );
+  }
+
+  if (!conversations?.length) {
+    return (
+      <div className="p-4">
+        <EmptyState
+          title="No conversations yet"
+          description="Pick a contact to start your first conversation."
+        />
+      </div>
+    );
+  }
+
+  if (!filtered?.length) {
+    const query = search.trim();
+
+    return (
+      <div className="p-4">
+        <EmptyState
+          title="No conversations found"
+          description={getNoResultsMessage(query, filter)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <nav aria-label="Conversations">
+      <ul className="divide-y divide-border/40">
+        {filtered.map((conversation) => (
+          <li key={conversation.id}>
+            <ConversationItem conversation={conversation} />
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 
@@ -57,49 +145,16 @@ export function ConversationList() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {isLoading ? (
-          <ConversationListSkeleton />
-        ) : isError ? (
-          <div className="p-4">
-            <ErrorState
-              title="Failed to load conversations"
-              description={
-                error?.message || "Please check your connection and try again."
-              }
-              onRetry={() => refetch()}
-            />
-          </div>
-        ) : conversations.length === 0 ? (
-          <div className="p-4">
-            <EmptyState
-              title="No conversations yet"
-              description="Pick a contact to start your first conversation."
-            />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="p-4">
-            <EmptyState
-              title="No conversations found"
-              description={
-                search.trim()
-                  ? `No chats match "${search.trim()}".`
-                  : filter === "unread"
-                    ? "You have caught up with all messages."
-                    : "No group conversations found."
-              }
-            />
-          </div>
-        ) : (
-          <nav aria-label="Conversations">
-            <ul className="divide-y divide-border/40">
-              {filtered.map((conversation) => (
-                <li key={conversation.id}>
-                  <ConversationItem conversation={conversation} />
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )}
+        <ConversationListContent
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          conversations={conversations}
+          filtered={filtered}
+          search={search}
+          filter={filter}
+          onRetry={() => refetch()}
+        />
       </div>
     </div>
   );

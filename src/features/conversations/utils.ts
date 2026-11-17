@@ -1,4 +1,4 @@
-import type { Message } from "@/features/messages";
+import { DELETED_MESSAGE_LABEL, type Message } from "@/features/messages";
 import { formatDate } from "@/shared/utils/formatDate";
 import { CURRENT_USER_ID } from "./api";
 import type { Conversation } from "./types";
@@ -83,6 +83,25 @@ export function applyIncomingMessage(
   ];
 }
 
+// edits and deletes only matter here when they hit the last message
+export function applyUpdatedMessage(
+  conversations: Conversation[],
+  message: Message,
+): Conversation[] {
+  return conversations.map((conv) => {
+    if (
+      conv.id === message.conversationId &&
+      conv.lastMessage?.id === message.id
+    ) {
+      return {
+        ...conv,
+        lastMessage: message,
+      };
+    }
+    return conv;
+  });
+}
+
 // only direct chats show an online dot; group chats are left as is
 export function applyPresenceChange(
   conversations: Conversation[],
@@ -103,4 +122,14 @@ export function applyPresenceChange(
     }
     return conv;
   });
+}
+
+export function formatConversationPreview(
+  message: Message | null,
+  currentUserId: string,
+): string {
+  if (!message) return "";
+  if (message.deletedAt) return DELETED_MESSAGE_LABEL;
+  if (message.senderId === currentUserId) return `You: ${message.text}`;
+  return message.text;
 }
