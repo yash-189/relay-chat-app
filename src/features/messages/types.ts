@@ -1,8 +1,12 @@
-export type MessageStatus = "sending" | "sent" | "delivered" | "read";
+export type MessageStatus =
+  | "sending"
+  | "sent"
+  | "delivered"
+  | "read"
+  | "failed";
 
 export interface MessageReaction {
   emoji: string;
-  count: number;
   userIds: string[];
 }
 
@@ -17,4 +21,18 @@ export interface Message {
   editedAt?: string;
   deletedAt?: string;
   reactions?: MessageReaction[];
+}
+
+export interface SendMessageInput {
+  id: string;
+  conversationId: string;
+  text: string;
+  replyToId?: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  isOnline: boolean;
 }
