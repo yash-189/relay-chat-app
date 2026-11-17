@@ -1,8 +1,12 @@
-export type MockMessageStatus = "sending" | "sent" | "delivered" | "read";
+export type MockMessageStatus =
+  | "sending"
+  | "sent"
+  | "delivered"
+  | "read"
+  | "failed";
 
 export interface MockReaction {
   emoji: string;
-  count: number;
   userIds: string[];
 }
 
@@ -17,6 +21,14 @@ export interface MockMessage {
   editedAt?: string;
   deletedAt?: string;
   reactions?: MockReaction[];
+}
+
+export interface SendMessageInput {
+  id: string;
+  conversationId: string;
+  text: string;
+  senderId?: string;
+  replyToId?: string;
 }
 
 export interface MockUser {
@@ -41,8 +53,14 @@ export interface MockConversation {
 
 export interface ChatEvents {
   "message:new": MockMessage;
+  "message:updated": MockMessage;
   "presence:change": {
     userId: string;
     isOnline: boolean;
+  };
+  typing: {
+    conversationId: string;
+    userId: string;
+    isTyping: boolean;
   };
 }

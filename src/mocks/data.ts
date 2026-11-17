@@ -59,7 +59,7 @@ const hour = 60 * minute;
 const day = 24 * hour;
 
 export const SEED_MESSAGES: MockMessage[] = [
-  // conv-1: sarah chen (direct)
+  // conv-1 (Sarah Chen, direct) - unreadCount: 2
   {
     id: "msg-1-1",
     conversationId: "conv-1",
@@ -117,7 +117,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "delivered",
   },
 
-  // conv-2: frontend architecture (group)
+  // conv-2 (Frontend Architecture, group) - unreadCount: 3
   {
     id: "msg-2-1",
     conversationId: "conv-2",
@@ -191,7 +191,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "delivered",
   },
 
-  // conv-3: marcus johnson (direct)
+  // conv-3 (Marcus Johnson, direct) - unreadCount: 0
   {
     id: "msg-3-1",
     conversationId: "conv-3",
@@ -241,7 +241,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "sent",
   },
 
-  // conv-4: product design (group)
+  // conv-4 (Product Design, group) - unreadCount: 1
   {
     id: "msg-4-1",
     conversationId: "conv-4",
@@ -307,7 +307,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "delivered",
   },
 
-  // conv-5: emma watson (direct)
+  // conv-5 (Emma Watson, direct) - unreadCount: 0
   {
     id: "msg-5-1",
     conversationId: "conv-5",
@@ -357,7 +357,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "read",
   },
 
-  // conv-6: weekend runners (group)
+  // conv-6 (Weekend Runners, group) - unreadCount: 0
   {
     id: "msg-6-1",
     conversationId: "conv-6",
@@ -415,7 +415,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "delivered",
   },
 
-  // conv-7: liam davis (direct)
+  // conv-7 (Liam Davis, direct) - unreadCount: 4
   {
     id: "msg-7-1",
     conversationId: "conv-7",
@@ -481,7 +481,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "delivered",
   },
 
-  // conv-8: olivia taylor (direct)
+  // conv-8 (Olivia Taylor, direct) - unreadCount: 0
   {
     id: "msg-8-1",
     conversationId: "conv-8",
@@ -531,7 +531,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "read",
   },
 
-  // conv-9: noah wilson (direct)
+  // conv-9 (Noah Wilson, direct) - unreadCount: 0
   {
     id: "msg-9-1",
     conversationId: "conv-9",
@@ -573,7 +573,7 @@ export const SEED_MESSAGES: MockMessage[] = [
     status: "read",
   },
 
-  // conv-10: sophia martinez (direct)
+  // conv-10 (Sophia Martinez, direct) - unreadCount: 0
   {
     id: "msg-10-1",
     conversationId: "conv-10",
@@ -622,6 +622,28 @@ export const SEED_MESSAGES: MockMessage[] = [
     createdAt: new Date(now - 1 * day).toISOString(),
     status: "read",
   },
+];
+
+const LOAD_TEST_COUNT = 10_000;
+const loadBaseTime = new Date("2026-11-01T00:00:00.000Z").getTime();
+export const LOAD_TEST_MESSAGES: MockMessage[] = Array.from(
+  { length: LOAD_TEST_COUNT },
+  (_, index) => {
+    const isOwn = index % 2 === 0;
+    return {
+      id: `msg-load-${index + 1}`,
+      conversationId: "conv-load",
+      senderId: isOwn ? CURRENT_USER_ID : "user-2",
+      text: `Load test message #${index + 1} checking virtualization performance.`,
+      createdAt: new Date(loadBaseTime + index * 60_000).toISOString(),
+      status: isOwn ? "read" : "delivered",
+    };
+  },
+);
+
+export const ALL_INITIAL_MESSAGES: MockMessage[] = [
+  ...SEED_MESSAGES,
+  ...LOAD_TEST_MESSAGES,
 ];
 
 export const SEED_CONVERSATIONS: MockConversation[] = [
@@ -719,6 +741,16 @@ export const SEED_CONVERSATIONS: MockConversation[] = [
     avatarUrl: "https://i.pravatar.cc/150?u=user-8",
     participantIds: [CURRENT_USER_ID, "user-8"],
     lastMessage: SEED_MESSAGES[67],
+    unreadCount: 0,
+    isOnline: true,
+  },
+  {
+    id: "conv-load",
+    type: "direct",
+    name: "Load test",
+    avatarUrl: "https://i.pravatar.cc/150?u=load-test",
+    participantIds: [CURRENT_USER_ID, "user-2"],
+    lastMessage: LOAD_TEST_MESSAGES[LOAD_TEST_COUNT - 1],
     unreadCount: 0,
     isOnline: true,
   },

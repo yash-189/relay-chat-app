@@ -4,19 +4,26 @@ import {
   listConversations,
   listUsers,
   toggleUserOnline,
+  updateMessageStatus,
 } from "./db";
 import { chatEmitter } from "./emitter";
-import type { MockMessage } from "./types";
+import type { MockMessage, MockMessageStatus } from "./types";
 
-// plays the other users: sends them messages and flips their online status
-// on a timer, so the app has live events without a backend.
+// plays the other users: sends them messages, flips their online status,
+// moves your messages to delivered/read and sometimes types a reply, so the
+// app has live events without a backend.
 
 const MESSAGE_INTERVAL_MIN_MS = 8000;
 const MESSAGE_INTERVAL_JITTER_MS = 7000;
-const PRESENCE_TOGGLE_CHANCE = 0.4;
+const PRESENCE_TOGGLE_CHANCE = 0.6;
+const DELIVERY_DELAY_MS = 1000;
+const READ_DELAY_MS = 1800;
+const REPLY_CHANCE = 0.5;
+const TYPING_DELAY_MS = 600;
+const TYPING_DURATION_MS = 2000;
 const SIMULATOR_GLOBAL_KEY = "__CHAT_APP_MOCK_SIMULATOR_RUNNING__";
 
-const SIMULATOR_MESSAGES = [
+const INCOMING_TEXTS = [
   "Just checking in, did you get a chance to review that?",
   "Looks great to me, let's proceed with it!",
   "Could you check the latest pull request when you have a minute?",
@@ -27,59 +34,137 @@ const SIMULATOR_MESSAGES = [
   "Awesome work on this release!",
 ];
 
+const REPLY_TEXTS = [
+  "Got it, thanks!",
+  "Makes sense to me.",
+  "I will review this right away.",
+  "Let me test this on my branch.",
+  "Looks good, heading over to check it now.",
+  "Sounds like a plan!",
+];
+
 let timerId: ReturnType<typeof setTimeout> | null = null;
+let stopTrackingOwnMessages: (() => void) | null = null;
 
-function runSimulationStep() {
-  const conversations = listConversations();
-  const users = listUsers();
+function pickRandom<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
 
-  if (conversations.length > 0) {
-    const convIndex = Math.floor(Math.random() * conversations.length);
-    const targetConv = conversations[convIndex];
+function createIncomingMessage(
+  conversationId: string,
+  senderId: string,
+  text: string,
+): MockMessage {
+  return {
+    id: `sim-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    conversationId,
+    senderId,
+    text,
+    createdAt: new Date().toISOString(),
+    status: "delivered",
+  };
+}
 
-    const nonMeParticipants = targetConv.participantIds.filter(
-      (id) => id !== CURRENT_USER_ID,
+function deliver(message: MockMessage) {
+  insertIncomingMessage(message);
+  chatEmitter.emit("message:new", message);
+}
+
+function emitStatus(messageId: string, status: MockMessageStatus) {
+  const updated = updateMessageStatus(messageId, status);
+  if (updated) chatEmitter.emit("message:updated", updated);
+}
+
+function onlineRecipients(conversationId: string): string[] {
+  const conversation = listConversations().find((c) => c.id === conversationId);
+  if (!conversation) return [];
+
+  const onlineIds = new Set(
+    listUsers()
+      .filter((u) => u.isOnline)
+      .map((u) => u.id),
+  );
+  return conversation.participantIds.filter(
+    (id) => id !== CURRENT_USER_ID && onlineIds.has(id),
+  );
+}
+
+function typeThenReply(conversationId: string, userId: string) {
+  chatEmitter.emit("typing", { conversationId, userId, isTyping: true });
+
+  setTimeout(() => {
+    chatEmitter.emit("typing", { conversationId, userId, isTyping: false });
+    deliver(
+      createIncomingMessage(conversationId, userId, pickRandom(REPLY_TEXTS)),
     );
-    const senderId =
-      nonMeParticipants.length > 0
-        ? nonMeParticipants[
-            Math.floor(Math.random() * nonMeParticipants.length)
-          ]
-        : "user-2";
+  }, TYPING_DURATION_MS);
+}
 
-    const randomText =
-      SIMULATOR_MESSAGES[Math.floor(Math.random() * SIMULATOR_MESSAGES.length)];
+// read only happens while someone on the other side is online
+function markReadIfSomeoneOnline(message: MockMessage) {
+  const recipients = onlineRecipients(message.conversationId);
+  if (recipients.length === 0) return;
 
-    const newMessage: MockMessage = {
-      id: `sim-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      conversationId: targetConv.id,
-      senderId,
-      text: randomText,
-      createdAt: new Date().toISOString(),
-      status: "delivered",
-    };
+  emitStatus(message.id, "read");
 
-    insertIncomingMessage(newMessage);
-    chatEmitter.emit("message:new", newMessage);
+  if (Math.random() < REPLY_CHANCE) {
+    const responderId = pickRandom(recipients);
+    setTimeout(
+      () => typeThenReply(message.conversationId, responderId),
+      TYPING_DELAY_MS,
+    );
   }
+}
 
-  if (Math.random() > PRESENCE_TOGGLE_CHANCE && users.length > 1) {
-    const nonMeUsers = users.filter((u) => u.id !== CURRENT_USER_ID);
-    const targetUser =
-      nonMeUsers[Math.floor(Math.random() * nonMeUsers.length)];
-    const newStatus = toggleUserOnline(targetUser.id);
-    if (newStatus !== null) {
-      chatEmitter.emit("presence:change", {
-        userId: targetUser.id,
-        isOnline: newStatus,
-      });
-    }
+function trackOwnMessage(message: MockMessage) {
+  if (message.senderId !== CURRENT_USER_ID) return;
+
+  setTimeout(() => {
+    emitStatus(message.id, "delivered");
+    setTimeout(() => markReadIfSomeoneOnline(message), READ_DELAY_MS);
+  }, DELIVERY_DELAY_MS);
+}
+
+function sendRandomIncomingMessage() {
+  const conversations = listConversations();
+  if (conversations.length === 0) return;
+
+  const conversation = pickRandom(conversations);
+  const others = conversation.participantIds.filter(
+    (id) => id !== CURRENT_USER_ID,
+  );
+  if (others.length === 0) return;
+
+  deliver(
+    createIncomingMessage(
+      conversation.id,
+      pickRandom(others),
+      pickRandom(INCOMING_TEXTS),
+    ),
+  );
+}
+
+function toggleRandomPresence() {
+  const others = listUsers().filter((u) => u.id !== CURRENT_USER_ID);
+  if (others.length === 0) return;
+
+  const user = pickRandom(others);
+  const isOnline = toggleUserOnline(user.id);
+  if (isOnline !== null) {
+    chatEmitter.emit("presence:change", { userId: user.id, isOnline });
   }
+}
 
-  const nextDelay = Math.floor(
+function nextDelay() {
+  return Math.floor(
     MESSAGE_INTERVAL_MIN_MS + Math.random() * MESSAGE_INTERVAL_JITTER_MS,
   );
-  timerId = setTimeout(runSimulationStep, nextDelay);
+}
+
+function runSimulationStep() {
+  sendRandomIncomingMessage();
+  if (Math.random() < PRESENCE_TOGGLE_CHANCE) toggleRandomPresence();
+  timerId = setTimeout(runSimulationStep, nextDelay());
 }
 
 export function startSimulator(): void {
@@ -88,15 +173,14 @@ export function startSimulator(): void {
     string,
     boolean | undefined
   >;
-  if (globalObj[SIMULATOR_GLOBAL_KEY]) {
-    return;
-  }
+  if (globalObj[SIMULATOR_GLOBAL_KEY]) return;
   globalObj[SIMULATOR_GLOBAL_KEY] = true;
 
-  const initialDelay = Math.floor(
-    MESSAGE_INTERVAL_MIN_MS + Math.random() * MESSAGE_INTERVAL_JITTER_MS,
+  stopTrackingOwnMessages = chatEmitter.subscribe(
+    "message:new",
+    trackOwnMessage,
   );
-  timerId = setTimeout(runSimulationStep, initialDelay);
+  timerId = setTimeout(runSimulationStep, nextDelay());
 }
 
 export function stopSimulator(): void {
@@ -104,6 +188,9 @@ export function stopSimulator(): void {
     clearTimeout(timerId);
     timerId = null;
   }
+  stopTrackingOwnMessages?.();
+  stopTrackingOwnMessages = null;
+
   const globalObj = globalThis as unknown as Record<
     string,
     boolean | undefined

@@ -1,5 +1,15 @@
 export { CURRENT_USER_ID } from "./data";
-export { getConversations, getUsers, markAsRead } from "./db";
+export {
+  deleteMessage,
+  editMessage,
+  failNextSendMessage,
+  getConversations,
+  getMessages,
+  getUsers,
+  markAsRead,
+  sendMessage,
+  toggleReaction,
+} from "./db";
 export { chatEmitter } from "./emitter";
 export { startSimulator, stopSimulator } from "./simulator";
 export { subscribe } from "./subscribe";
@@ -11,4 +21,5 @@ export type {
   MockMessageStatus,
   MockReaction,
   MockUser,
+  SendMessageInput,
 } from "./types";

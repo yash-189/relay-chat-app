@@ -1,5 +1,17 @@
-import { CURRENT_USER_ID, SEED_CONVERSATIONS, SEED_USERS } from "./data";
-import type { MockConversation, MockMessage, MockUser } from "./types";
+import {
+  ALL_INITIAL_MESSAGES,
+  CURRENT_USER_ID,
+  SEED_CONVERSATIONS,
+  SEED_USERS,
+} from "./data";
+import { chatEmitter } from "./emitter";
+import type {
+  MockConversation,
+  MockMessage,
+  MockMessageStatus,
+  MockUser,
+  SendMessageInput,
+} from "./types";
 
 // in-memory store for the mock server. it resets on page reload.
 
@@ -12,6 +24,18 @@ let conversations: MockConversation[] = SEED_CONVERSATIONS.map((c) => ({
   lastMessage: c.lastMessage ? { ...c.lastMessage } : null,
   participantIds: [...c.participantIds],
 }));
+const messages: MockMessage[] = ALL_INITIAL_MESSAGES.map((m) => ({
+  ...m,
+  reactions: m.reactions
+    ? m.reactions.map((r) => ({ ...r, userIds: [...r.userIds] }))
+    : undefined,
+}));
+
+let shouldFailNextSend = false;
+
+export function failNextSendMessage(): void {
+  shouldFailNextSend = true;
+}
 
 const fakeLatency = (min = MIN_LATENCY_MS, max = MAX_LATENCY_MS) => {
   const duration = Math.floor(min + Math.random() * (max - min));
@@ -62,7 +86,118 @@ export async function markAsRead(
   return { ...conv };
 }
 
-// used by the simulator, which writes without fake latency
+export async function getMessages(
+  conversationId: string,
+): Promise<MockMessage[]> {
+  await fakeLatency();
+  return messages
+    .filter((m) => m.conversationId === conversationId)
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    )
+    .map((m) => ({ ...m }));
+}
+
+export async function sendMessage(
+  input: SendMessageInput,
+): Promise<MockMessage> {
+  await fakeLatency();
+
+  if (shouldFailNextSend) {
+    shouldFailNextSend = false;
+    throw new Error("Failed to send message");
+  }
+
+  const senderId = input.senderId ?? CURRENT_USER_ID;
+  const newMessage: MockMessage = {
+    id: input.id,
+    conversationId: input.conversationId,
+    senderId,
+    text: input.text,
+    createdAt: new Date().toISOString(),
+    status: "sent",
+    replyToId: input.replyToId,
+  };
+
+  messages.push(newMessage);
+
+  const conv = conversations.find((c) => c.id === input.conversationId);
+  if (conv) {
+    conv.lastMessage = newMessage;
+    if (senderId !== CURRENT_USER_ID) {
+      conv.unreadCount += 1;
+    }
+    conversations = [conv, ...conversations.filter((c) => c.id !== conv.id)];
+  }
+
+  chatEmitter.emit("message:new", { ...newMessage });
+
+  return { ...newMessage };
+}
+
+export async function editMessage(
+  id: string,
+  text: string,
+): Promise<MockMessage | null> {
+  await fakeLatency();
+  const message = messages.find((m) => m.id === id);
+  if (!message) return null;
+
+  message.text = text;
+  message.editedAt = new Date().toISOString();
+
+  const conv = conversations.find((c) => c.id === message.conversationId);
+  if (conv && conv.lastMessage?.id === id) {
+    conv.lastMessage = { ...message };
+  }
+
+  chatEmitter.emit("message:updated", { ...message });
+  return { ...message };
+}
+
+export async function deleteMessage(id: string): Promise<MockMessage | null> {
+  await fakeLatency();
+  const message = messages.find((m) => m.id === id);
+  if (!message) return null;
+
+  message.deletedAt = new Date().toISOString();
+  message.text = "";
+
+  const conv = conversations.find((c) => c.id === message.conversationId);
+  if (conv && conv.lastMessage?.id === id) {
+    conv.lastMessage = { ...message };
+  }
+
+  chatEmitter.emit("message:updated", { ...message });
+  return { ...message };
+}
+
+export async function toggleReaction(
+  messageId: string,
+  emoji: string,
+  userId = CURRENT_USER_ID,
+): Promise<MockMessage | null> {
+  await fakeLatency();
+  const message = messages.find((m) => m.id === messageId);
+  if (!message) return null;
+
+  const reactions = message.reactions ?? [];
+  const existing = reactions.find((r) => r.emoji === emoji);
+  const userIds = existing?.userIds.includes(userId)
+    ? existing.userIds.filter((id) => id !== userId)
+    : [...(existing?.userIds ?? []), userId];
+  const others = reactions.filter((r) => r.emoji !== emoji);
+  const nextReactions = userIds.length
+    ? [...others, { emoji, userIds }]
+    : others;
+
+  message.reactions = nextReactions;
+  chatEmitter.emit("message:updated", { ...message });
+  return { ...message };
+}
+
+// direct access for the simulator, which writes without fake latency
 export function listConversations(): MockConversation[] {
   return conversations;
 }
@@ -75,6 +210,7 @@ export function insertIncomingMessage(message: MockMessage): void {
   const conv = conversations.find((c) => c.id === message.conversationId);
   if (!conv) return;
 
+  messages.push(message);
   conv.lastMessage = message;
   conv.unreadCount += 1;
 
@@ -94,4 +230,14 @@ export function toggleUserOnline(userId: string): boolean | null {
   }
 
   return user.isOnline;
+}
+
+export function updateMessageStatus(
+  messageId: string,
+  status: MockMessageStatus,
+): MockMessage | null {
+  const message = messages.find((m) => m.id === messageId);
+  if (!message) return null;
+  message.status = status;
+  return { ...message };
 }
