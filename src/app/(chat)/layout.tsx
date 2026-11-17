@@ -1,3 +1,8 @@
+import { Suspense } from "react";
+import {
+  ConversationList,
+  ConversationListSkeleton,
+} from "@/features/conversations";
 import { site } from "@/lib/site";
 import { ChatShell } from "@/ui/components/layout/ChatShell";
 import { ThemeToggle } from "@/ui/components/theme/ThemeToggle";
@@ -11,7 +16,9 @@ export default function ChatLayout({ children }: LayoutProps<"/">) {
             <span className="font-semibold">{site.name}</span>
             <ThemeToggle />
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto" />
+          <Suspense fallback={<ConversationListSkeleton />}>
+            <ConversationList />
+          </Suspense>
         </>
       }
     >
