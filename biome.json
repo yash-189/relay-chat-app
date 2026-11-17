@@ -76,6 +76,26 @@
       }
     },
     {
+      "includes": ["src/mocks/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/features/**"],
+                    "message": "src/mocks sits below features and must not import them."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "includes": ["src/ui/primitives/**"],
       "linter": {
         "rules": {
