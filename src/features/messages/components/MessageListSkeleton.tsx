@@ -16,7 +16,7 @@ export function MessageListSkeleton() {
   return (
     <div
       aria-busy="true"
-      className="flex min-h-0 flex-1 flex-col justify-end overflow-hidden bg-muted/40 px-2 py-4 md:px-12"
+      className="flex min-h-0 flex-1 flex-col justify-end overflow-hidden bg-muted/40 px-2 pt-4 pb-14 md:px-12"
     >
       <span className="sr-only">Loading messages...</span>
       {BUBBLES.map(({ isOwn, width }, index) => (

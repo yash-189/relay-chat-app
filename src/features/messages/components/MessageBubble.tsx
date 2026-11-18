@@ -1,13 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 import { AlertCircle, Check, CheckCheck, Clock, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/ui/primitives/avatar";
 import { CURRENT_USER_ID } from "../api";
 import { DELETED_MESSAGE_LABEL, MessageStatusLabels } from "../constants";
 import type { Message, MessageStatus } from "../types";
 import { findUserReaction, formatMessageTime } from "../utils";
 import { MessageActions } from "./MessageActions";
 import { MessageAttachment } from "./MessageAttachment";
+import { MessageSenderAvatar } from "./MessageSenderAvatar";
 import { ReplyPreview } from "./ReplyPreview";
 
 const EDITED_LABEL = "edited";
@@ -112,23 +112,6 @@ function MessageReplySection({
         onClick={handleClick}
       />
     </div>
-  );
-}
-
-function MessageSenderAvatar({
-  name,
-  avatarUrl,
-}: {
-  name?: string;
-  avatarUrl?: string | null;
-}) {
-  const fallback = name ? name.slice(0, 2).toUpperCase() : "?";
-
-  return (
-    <Avatar className="size-7 shrink-0 select-none">
-      {avatarUrl && <AvatarImage src={avatarUrl} alt={name ?? "User"} />}
-      <AvatarFallback className="text-xs">{fallback}</AvatarFallback>
-    </Avatar>
   );
 }
 

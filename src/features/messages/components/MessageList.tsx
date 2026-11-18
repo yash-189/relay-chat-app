@@ -12,9 +12,12 @@ import { useAutoScroll } from "../hooks/useAutoScroll";
 import { useDeleteMessage } from "../hooks/useDeleteMessage";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { useToggleReaction } from "../hooks/useToggleReaction";
+import { useTypingLabel } from "../hooks/useTypingLabel";
+import { useTypingUsers } from "../hooks/useTypingUsers";
 import type { Message } from "../types";
 import { flattenMessagesWithDates, groupByDate } from "../utils";
 import { MessageBubble } from "./MessageBubble";
+import { TypingBubble } from "./TypingBubble";
 
 // older pages load when the reader scrolls near the top
 const LOAD_OLDER_THRESHOLD_PX = 300;
@@ -47,6 +50,8 @@ export function MessageList({
   const deleteMutation = useDeleteMessage(conversationId);
   const toggleReactionMutation = useToggleReaction(conversationId);
   const sendMutation = useSendMessage(conversationId);
+  const typingLabel = useTypingLabel(conversationId);
+  const typingUser = userMap.get(useTypingUsers(conversationId)[0] ?? "");
 
   const messageMap = useMemo(() => {
     const map = new Map<string, Message>();
@@ -129,7 +134,7 @@ export function MessageList({
         onScroll={handleListScroll}
         role="log"
         aria-label="Messages"
-        className="flex-1 overflow-y-auto bg-muted/40 px-2 py-4 md:px-12"
+        className="flex-1 overflow-y-auto bg-muted/40 px-2 pt-4 pb-14 md:px-12"
       >
         {olderMessages.isLoading && (
           <div className="absolute inset-x-0 top-2 z-10 flex justify-center">
@@ -204,6 +209,16 @@ export function MessageList({
           })}
         </div>
       </div>
+
+      {typingLabel && (
+        <div className="pointer-events-none absolute bottom-2 left-5 md:left-15">
+          <TypingBubble
+            label={typingLabel}
+            name={typingUser?.name}
+            avatarUrl={typingUser?.avatarUrl}
+          />
+        </div>
+      )}
 
       {hasNewMessagesBelow && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
