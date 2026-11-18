@@ -3,6 +3,7 @@
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
+import { useTypingLabel } from "@/features/messages";
 import { Routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/shared/utils/getInitials";
@@ -34,6 +35,7 @@ export function ConversationItem({
     (params?.id === conversation.id ||
       pathname === Routes.chat(conversation.id));
 
+  const typingLabel = useTypingLabel(conversation.id);
   const previewText = formatConversationPreview(
     conversation.lastMessage,
     CURRENT_USER_ID,
@@ -90,8 +92,15 @@ export function ConversationItem({
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="min-h-5 truncate text-muted-foreground text-sm">
-            {previewText}
+          <p
+            className={cn(
+              "min-h-5 truncate text-sm",
+              typingLabel
+                ? "font-medium text-primary"
+                : "text-muted-foreground",
+            )}
+          >
+            {typingLabel ?? previewText}
           </p>
           {conversation.unreadCount > 0 && (
             <Badge

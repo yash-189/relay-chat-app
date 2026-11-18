@@ -4,6 +4,11 @@ import { CURRENT_USER_ID } from "../api";
 import type { Conversation } from "../types";
 import { ConversationItem } from "./ConversationItem";
 
+vi.mock("@/features/messages", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/messages")>()),
+  useTypingLabel: () => null,
+}));
+
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
   useParams: () => ({}),
