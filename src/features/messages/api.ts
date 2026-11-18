@@ -2,16 +2,14 @@ import {
   CURRENT_USER_ID,
   type MockMessage,
   type MockReaction,
-  type MockUser,
   deleteMessage as mockDeleteMessage,
   editMessage as mockEditMessage,
   getMessages as mockGetMessages,
-  getUsers as mockGetUsers,
   sendMessage as mockSendMessage,
   subscribe as mockSubscribe,
   toggleReaction as mockToggleReaction,
 } from "@/mocks";
-import type { Message, MessageReaction, SendMessageInput, User } from "./types";
+import type { Message, MessageReaction, SendMessageInput } from "./types";
 
 export { CURRENT_USER_ID };
 
@@ -34,15 +32,6 @@ function mapMessage(msg: MockMessage): Message {
     editedAt: msg.editedAt,
     deletedAt: msg.deletedAt,
     reactions: msg.reactions?.map(mapReaction),
-  };
-}
-
-function mapUser(u: MockUser): User {
-  return {
-    id: u.id,
-    name: u.name,
-    avatarUrl: u.avatarUrl,
-    isOnline: u.isOnline,
   };
 }
 
@@ -81,11 +70,6 @@ export async function toggleReaction(
 ): Promise<Message | null> {
   const result = await mockToggleReaction(id, emoji, CURRENT_USER_ID);
   return result ? mapMessage(result) : null;
-}
-
-export async function getUsers(): Promise<User[]> {
-  const result = await mockGetUsers();
-  return result.map(mapUser);
 }
 
 export function onNewMessage(handler: (message: Message) => void) {

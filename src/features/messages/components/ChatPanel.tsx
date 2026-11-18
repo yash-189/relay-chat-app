@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useUsers } from "@/features/users";
 import { useChatStore } from "@/store/chat.store";
 import { CenteredState } from "@/ui/components/feedback/CenteredState";
 import { EmptyState } from "@/ui/components/feedback/EmptyState";
 import { ErrorState } from "@/ui/components/feedback/ErrorState";
 import { useMessages } from "../hooks/useMessages";
-import { useUsers } from "../hooks/useUsers";
 import type { Message } from "../types";
 import { searchMatchingMessageIds } from "../utils";
 import { MessageComposer } from "./MessageComposer";

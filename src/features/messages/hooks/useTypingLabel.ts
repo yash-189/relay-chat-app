@@ -1,8 +1,8 @@
 "use client";
 
+import { useUsers } from "@/features/users";
 import { formatTypingLabel } from "../utils";
 import { useTypingUsers } from "./useTypingUsers";
-import { useUsers } from "./useUsers";
 
 export function useTypingLabel(conversationId: string): string | null {
   const typingUserIds = useTypingUsers(conversationId);

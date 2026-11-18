@@ -8,5 +8,4 @@ export type {
   MessageReaction,
   MessageStatus,
   SendMessageInput,
-  User,
 } from "./types";

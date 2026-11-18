@@ -29,10 +29,3 @@ export interface SendMessageInput {
   text: string;
   replyToId?: string;
 }
-
-export interface User {
-  id: string;
-  name: string;
-  avatarUrl: string;
-  isOnline: boolean;
-}
