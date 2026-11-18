@@ -1,4 +1,5 @@
 export const site = {
-  name: "Chat",
-  description: "A chat app with direct messages and groups.",
+  name: "Relay",
+  description:
+    "Direct and group chats with live typing, read receipts, reactions and replies.",
 } as const;
