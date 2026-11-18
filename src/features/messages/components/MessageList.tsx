@@ -2,7 +2,9 @@
 
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChevronDown } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
+import type { User } from "@/features/users";
+import { useUsers } from "@/features/users";
 import { useChatStore } from "@/store/chat.store";
 import { Button } from "@/ui/primitives/button";
 import { CURRENT_USER_ID } from "../api";
@@ -10,8 +12,7 @@ import { useAutoScroll } from "../hooks/useAutoScroll";
 import { useDeleteMessage } from "../hooks/useDeleteMessage";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { useToggleReaction } from "../hooks/useToggleReaction";
-import { useUsers } from "../hooks/useUsers";
-import type { Message, User } from "../types";
+import type { Message } from "../types";
 import { flattenMessagesWithDates, groupByDate } from "../utils";
 import { MessageBubble } from "./MessageBubble";
 
@@ -49,21 +50,24 @@ export function MessageList({
     return flattenMessagesWithDates(groups);
   }, [messages]);
 
-  const { containerRef, hasNewMessagesBelow, handleScroll, scrollToBottom } =
-    useAutoScroll({
-      totalItems: rows.length,
-      onScrollToBottom: () => {
-        if (rows.length > 0) {
-          virtualizer.scrollToIndex(rows.length - 1, { align: "end" });
-        }
-      },
-    });
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => containerRef.current,
     estimateSize: (index) => (rows[index].type === "date-separator" ? 36 : 64),
     overscan: 12,
+  });
+
+  const { hasNewMessagesBelow, handleScroll, scrollToBottom } = useAutoScroll({
+    containerRef,
+    totalItems: rows.length,
+    contentHeight: virtualizer.getTotalSize(),
+    onScrollToBottom: () => {
+      if (rows.length > 0) {
+        virtualizer.scrollToIndex(rows.length - 1, { align: "end" });
+      }
+    },
   });
 
   const handleScrollToMessage = (id: string) => {
@@ -91,7 +95,7 @@ export function MessageList({
         onScroll={handleScroll}
         role="log"
         aria-label="Messages"
-        className="flex-1 overflow-y-auto px-2 py-4"
+        className="flex-1 overflow-y-auto bg-muted/40 px-2 py-4 md:px-12"
       >
         <div
           style={{
@@ -117,36 +121,42 @@ export function MessageList({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                {row.type === "date-separator" ? (
-                  <div className="my-3 flex items-center justify-center">
-                    <span className="rounded-full bg-muted/80 px-3 py-0.5 font-medium text-muted-foreground text-xs shadow-2xs">
-                      {row.date}
-                    </span>
-                  </div>
-                ) : (
-                  <MessageRow
-                    message={row.message}
-                    isGroup={isGroup}
-                    isHighlighted={row.message.id === highlightedMessageId}
-                    replyMessage={
-                      row.message.replyToId
-                        ? messageMap.get(row.message.replyToId)
-                        : undefined
-                    }
-                    userMap={userMap}
-                    onReply={() => setReplyToId(conversationId, row.message.id)}
-                    onEdit={() => setEditingId(conversationId, row.message.id)}
-                    onDelete={() => deleteMutation.mutate(row.message.id)}
-                    onToggleReaction={(emoji) =>
-                      toggleReactionMutation.mutate({
-                        messageId: row.message.id,
-                        emoji,
-                      })
-                    }
-                    onScrollToMessage={handleScrollToMessage}
-                    onRetrySend={() => handleRetrySend(row.message)}
-                  />
-                )}
+                <div>
+                  {row.type === "date-separator" ? (
+                    <div className="my-3 flex items-center justify-center">
+                      <span className="rounded-full bg-muted/80 px-3 py-0.5 font-medium text-muted-foreground text-xs shadow-2xs">
+                        {row.date}
+                      </span>
+                    </div>
+                  ) : (
+                    <MessageRow
+                      message={row.message}
+                      isGroup={isGroup}
+                      isHighlighted={row.message.id === highlightedMessageId}
+                      replyMessage={
+                        row.message.replyToId
+                          ? messageMap.get(row.message.replyToId)
+                          : undefined
+                      }
+                      userMap={userMap}
+                      onReply={() =>
+                        setReplyToId(conversationId, row.message.id)
+                      }
+                      onEdit={() =>
+                        setEditingId(conversationId, row.message.id)
+                      }
+                      onDelete={() => deleteMutation.mutate(row.message.id)}
+                      onToggleReaction={(emoji) =>
+                        toggleReactionMutation.mutate({
+                          messageId: row.message.id,
+                          emoji,
+                        })
+                      }
+                      onScrollToMessage={handleScrollToMessage}
+                      onRetrySend={() => handleRetrySend(row.message)}
+                    />
+                  )}
+                </div>
               </div>
             );
           })}

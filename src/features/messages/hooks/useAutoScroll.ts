@@ -1,18 +1,28 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { isNearBottom } from "../utils";
 
 interface UseAutoScrollOptions {
+  containerRef: RefObject<HTMLDivElement | null>;
   totalItems: number;
+  contentHeight: number;
   onScrollToBottom?: () => void;
 }
 
 export function useAutoScroll({
+  containerRef,
   totalItems,
+  contentHeight,
   onScrollToBottom,
 }: UseAutoScrollOptions) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const [hasNewMessagesBelow, setHasNewMessagesBelow] = useState(false);
   const wasNearBottomRef = useRef(true);
   const prevCountRef = useRef(totalItems);
@@ -22,7 +32,7 @@ export function useAutoScroll({
     const el = containerRef.current;
     if (!el) return true;
     return isNearBottom(el.scrollTop, el.scrollHeight, el.clientHeight);
-  }, []);
+  }, [containerRef]);
 
   const handleScroll = useCallback(() => {
     const near = checkNearBottom();
@@ -46,8 +56,16 @@ export function useAutoScroll({
       if (!el) return;
       el.scrollTo({ top: el.scrollHeight, behavior });
     },
-    [onScrollToBottom],
+    [containerRef, onScrollToBottom],
   );
+
+  // rows start at estimated heights and grow once measured; stay pinned to the
+  // bottom while that happens, otherwise opening a chat lands above the end
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el || contentHeight === 0 || !wasNearBottomRef.current) return;
+    el.scrollTop = el.scrollHeight;
+  }, [containerRef, contentHeight]);
 
   useEffect(() => {
     if (totalItems === 0) return;
@@ -72,7 +90,6 @@ export function useAutoScroll({
   }, [totalItems, scrollToBottom]);
 
   return {
-    containerRef,
     hasNewMessagesBelow,
     handleScroll,
     scrollToBottom,

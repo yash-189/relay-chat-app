@@ -138,75 +138,82 @@ export function MessageComposer({
 
   return (
     <div className="border-t bg-background px-4 py-2">
-      {editingMessage && (
-        <div className="mb-2 flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-1.5 text-xs">
-          <div className="min-w-0 flex-1">
-            <span className="font-semibold text-primary">Editing message:</span>{" "}
-            <span className="truncate text-muted-foreground">
-              {editingMessage.text}
-            </span>
+      <div>
+        {editingMessage && (
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-1.5 text-xs">
+            <div className="min-w-0 flex-1">
+              <span className="font-semibold text-primary">
+                Editing message:
+              </span>{" "}
+              <span className="truncate text-muted-foreground">
+                {editingMessage.text}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelEditing}
+              className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
+              aria-label="Cancel editing"
+            >
+              <X className="size-3.5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleCancelEditing}
-            className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
-            aria-label="Cancel editing"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
-      )}
+        )}
 
-      {replyMessage && !editingMessage && (
-        <div className="mb-2 flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-1.5 text-xs">
-          <div className="min-w-0 flex-1">
-            <span className="font-semibold text-primary">
-              Replying to {replySenderName ?? "message"}:
-            </span>{" "}
-            <span className="truncate text-muted-foreground">
-              {replyMessage.deletedAt
-                ? DELETED_MESSAGE_LABEL
-                : replyMessage.text}
-            </span>
+        {replyMessage && !editingMessage && (
+          <div className="mb-2 flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-1.5 text-xs">
+            <div className="min-w-0 flex-1">
+              <span className="font-semibold text-primary">
+                Replying to {replySenderName ?? "message"}:
+              </span>{" "}
+              <span className="truncate text-muted-foreground">
+                {replyMessage.deletedAt
+                  ? DELETED_MESSAGE_LABEL
+                  : replyMessage.text}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelReply}
+              className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
+              aria-label="Cancel reply"
+            >
+              <X className="size-3.5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleCancelReply}
-            className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
-            aria-label="Cancel reply"
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
-      )}
+        )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex items-end gap-2">
-        <textarea
-          {...restRegister}
-          ref={(node) => {
-            formRef(node);
-            textareaRef.current = node;
-          }}
-          rows={1}
-          onKeyDown={handleKeyDown}
-          onChange={handleChange}
-          placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
-          className="max-h-32 min-h-9 flex-1 resize-none rounded-lg border bg-muted/40 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-ring focus:bg-background focus:ring-1 focus:ring-ring"
-          aria-label="Message text"
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!currentText || currentText.trim().length === 0}
-          aria-label={editingId ? "Save edited message" : "Send message"}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex items-end gap-2"
         >
-          {editingId ? (
-            <Check className="size-4" />
-          ) : (
-            <Send className="size-4" />
-          )}
-        </Button>
-      </form>
+          <textarea
+            {...restRegister}
+            ref={(node) => {
+              formRef(node);
+              textareaRef.current = node;
+            }}
+            rows={1}
+            onKeyDown={handleKeyDown}
+            onChange={handleChange}
+            placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
+            className="max-h-32 min-h-10 flex-1 resize-none rounded-lg border bg-muted/40 px-3 py-2 text-[0.9375rem] outline-none placeholder:text-muted-foreground focus:border-ring focus:bg-background focus:ring-1 focus:ring-ring"
+            aria-label="Message text"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!currentText || currentText.trim().length === 0}
+            aria-label={editingId ? "Save edited message" : "Send message"}
+          >
+            {editingId ? (
+              <Check className="size-4" />
+            ) : (
+              <Send className="size-4" />
+            )}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
