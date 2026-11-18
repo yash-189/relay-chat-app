@@ -17,7 +17,7 @@ export function ChatShell({ sidebar, children }: ChatShellProps) {
     <div className="flex h-dvh overflow-hidden">
       <aside
         className={cn(
-          "w-full flex-col border-r md:flex md:w-80 lg:w-96",
+          "w-full flex-col border-r bg-sidebar md:flex md:w-2/5 md:max-w-md lg:w-1/3",
           isChatOpen ? "hidden" : "flex",
         )}
       >
