@@ -20,7 +20,7 @@ function mapReaction(r: MockReaction): MessageReaction {
   };
 }
 
-function mapMessage(msg: MockMessage): Message {
+export function mapMessage(msg: MockMessage): Message {
   return {
     id: msg.id,
     conversationId: msg.conversationId,
@@ -32,6 +32,7 @@ function mapMessage(msg: MockMessage): Message {
     editedAt: msg.editedAt,
     deletedAt: msg.deletedAt,
     reactions: msg.reactions?.map(mapReaction),
+    attachment: msg.attachment ? { ...msg.attachment } : undefined,
   };
 }
 
@@ -46,6 +47,7 @@ export async function sendMessage(input: SendMessageInput): Promise<Message> {
     conversationId: input.conversationId,
     text: input.text,
     replyToId: input.replyToId,
+    attachment: input.attachment,
     senderId: CURRENT_USER_ID,
   });
   return mapMessage(result);

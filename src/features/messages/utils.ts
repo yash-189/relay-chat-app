@@ -1,4 +1,4 @@
-import type { Message, MessageReaction } from "./types";
+import type { Attachment, Message, MessageReaction } from "./types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -135,7 +135,7 @@ export function findUserReaction(
   return reactions.find((r) => r.userIds.includes(userId))?.emoji ?? null;
 }
 
-// one reaction per user: picking the same emoji removes it, a new one replaces it
+// one reaction per user, like whatsapp
 export function toggleReaction(
   reactions: MessageReaction[] = [],
   emoji: string,
@@ -154,4 +154,26 @@ export function toggleReaction(
   return withoutUser.map((r) =>
     r.emoji === emoji ? { ...r, userIds: [...r.userIds, userId] } : r,
   );
+}
+
+const FILE_SIZE_UNITS = ["B", "KB", "MB", "GB"];
+
+export function formatFileSize(bytes: number): string {
+  let size = bytes;
+  let unit = 0;
+  while (size >= 1024 && unit < FILE_SIZE_UNITS.length - 1) {
+    size /= 1024;
+    unit += 1;
+  }
+  const rounded = unit === 0 ? size : Math.round(size * 10) / 10;
+  return `${rounded} ${FILE_SIZE_UNITS[unit]}`;
+}
+
+export function isImageAttachment(attachment: Attachment): boolean {
+  return attachment.mimeType.startsWith("image/");
+}
+
+export function formatAttachmentLabel(attachment?: Attachment): string {
+  if (!attachment) return "";
+  return isImageAttachment(attachment) ? "📷 Photo" : `📎 ${attachment.name}`;
 }

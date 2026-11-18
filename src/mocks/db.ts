@@ -118,6 +118,7 @@ export async function sendMessage(
     createdAt: new Date().toISOString(),
     status: "sent",
     replyToId: input.replyToId,
+    attachment: input.attachment,
   };
 
   messages.push(newMessage);
@@ -182,7 +183,6 @@ export async function toggleReaction(
   const message = messages.find((m) => m.id === messageId);
   if (!message) return null;
 
-  // one reaction per user, so drop theirs before adding the new one
   const reactions = message.reactions ?? [];
   const hadSameEmoji = reactions.some(
     (r) => r.emoji === emoji && r.userIds.includes(userId),

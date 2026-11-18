@@ -1,4 +1,8 @@
-import { DELETED_MESSAGE_LABEL, type Message } from "@/features/messages";
+import {
+  DELETED_MESSAGE_LABEL,
+  formatAttachmentLabel,
+  type Message,
+} from "@/features/messages";
 import { formatDate } from "@/shared/utils/formatDate";
 import { CURRENT_USER_ID } from "./api";
 import type { Conversation } from "./types";
@@ -123,8 +127,9 @@ export function formatConversationPreview(
 ): string {
   if (!message) return "";
   if (message.deletedAt) return DELETED_MESSAGE_LABEL;
-  if (message.senderId === currentUserId) return `You: ${message.text}`;
-  return message.text;
+  const text = message.text || formatAttachmentLabel(message.attachment);
+  if (message.senderId === currentUserId) return `You: ${text}`;
+  return text;
 }
 
 export function applyMembersChange(

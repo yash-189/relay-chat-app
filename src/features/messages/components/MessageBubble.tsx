@@ -7,6 +7,7 @@ import { DELETED_MESSAGE_LABEL, MessageStatusLabels } from "../constants";
 import type { Message, MessageStatus } from "../types";
 import { findUserReaction, formatMessageTime } from "../utils";
 import { MessageActions } from "./MessageActions";
+import { MessageAttachment } from "./MessageAttachment";
 import { ReplyPreview } from "./ReplyPreview";
 
 const EDITED_LABEL = "edited";
@@ -160,6 +161,35 @@ function MessageFooter({
   );
 }
 
+function MessageContent({
+  message,
+  isOwn,
+}: {
+  message: Message;
+  isOwn: boolean;
+}) {
+  if (message.deletedAt) {
+    return (
+      <p className="text-[0.9375rem] text-muted-foreground italic">
+        {DELETED_MESSAGE_LABEL}
+      </p>
+    );
+  }
+
+  return (
+    <>
+      {message.attachment && (
+        <MessageAttachment attachment={message.attachment} isOwn={isOwn} />
+      )}
+      {message.text && (
+        <p className="whitespace-pre-wrap break-words text-[0.9375rem] leading-snug selection:bg-background/20">
+          {message.text}
+        </p>
+      )}
+    </>
+  );
+}
+
 interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
@@ -260,15 +290,7 @@ export function MessageBubble({
             />
           )}
 
-          {isDeleted ? (
-            <p className="text-[0.9375rem] text-muted-foreground italic">
-              {DELETED_MESSAGE_LABEL}
-            </p>
-          ) : (
-            <p className="whitespace-pre-wrap break-words text-[0.9375rem] leading-snug selection:bg-background/20">
-              {message.text}
-            </p>
-          )}
+          <MessageContent message={message} isOwn={isOwn} />
 
           <MessageFooter
             time={time}

@@ -10,6 +10,14 @@ export interface MessageReaction {
   userIds: string[];
 }
 
+// nothing is uploaded; url is a local data url
+export interface Attachment {
+  name: string;
+  size: number;
+  mimeType: string;
+  url: string;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -21,11 +29,13 @@ export interface Message {
   editedAt?: string;
   deletedAt?: string;
   reactions?: MessageReaction[];
+  attachment?: Attachment;
 }
 
 export interface SendMessageInput {
   id: string;
   conversationId: string;
   text: string;
+  attachment?: Attachment;
   replyToId?: string;
 }

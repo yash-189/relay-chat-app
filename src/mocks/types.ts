@@ -10,6 +10,13 @@ export interface MockReaction {
   userIds: string[];
 }
 
+export interface MockAttachment {
+  name: string;
+  size: number;
+  mimeType: string;
+  url: string;
+}
+
 export interface MockMessage {
   id: string;
   conversationId: string;
@@ -21,12 +28,14 @@ export interface MockMessage {
   editedAt?: string;
   deletedAt?: string;
   reactions?: MockReaction[];
+  attachment?: MockAttachment;
 }
 
 export interface SendMessageInput {
   id: string;
   conversationId: string;
   text: string;
+  attachment?: MockAttachment;
   senderId?: string;
   replyToId?: string;
 }

@@ -23,6 +23,7 @@ export function useSendMessage(conversationId: string) {
         createdAt: new Date().toISOString(),
         status: "sending",
         replyToId: input.replyToId,
+        attachment: input.attachment,
       };
 
       queryClient.setQueryData<Message[]>(

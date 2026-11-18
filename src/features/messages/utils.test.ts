@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Message, MessageReaction } from "./types";
+import type { Attachment, Message, MessageReaction } from "./types";
 import {
   findLatestOwnMessage,
+  formatAttachmentLabel,
+  formatFileSize,
   formatMessageTime,
   formatTypingLabel,
   groupByDate,
@@ -190,6 +192,31 @@ describe("messages utils", () => {
       ];
 
       expect(findLatestOwnMessage(messages, "me")?.id).toBe("m1");
+    });
+  });
+
+  describe("formatFileSize", () => {
+    it("keeps bytes whole and rounds larger units to one decimal", () => {
+      expect(formatFileSize(512)).toBe("512 B");
+      expect(formatFileSize(1536)).toBe("1.5 KB");
+      expect(formatFileSize(5 * 1024 * 1024)).toBe("5 MB");
+    });
+  });
+
+  describe("formatAttachmentLabel", () => {
+    const file = (mimeType: string): Attachment => ({
+      name: "spec.pdf",
+      size: 100,
+      mimeType,
+      url: "data:,",
+    });
+
+    it("labels images as a photo and other files by name", () => {
+      expect(formatAttachmentLabel(file("image/png"))).toBe("📷 Photo");
+      expect(formatAttachmentLabel(file("application/pdf"))).toBe(
+        "📎 spec.pdf",
+      );
+      expect(formatAttachmentLabel(undefined)).toBe("");
     });
   });
 });

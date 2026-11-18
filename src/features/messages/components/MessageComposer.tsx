@@ -1,18 +1,20 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Send, X } from "lucide-react";
+import { Check, Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useChatStore } from "@/store/chat.store";
 import { Button } from "@/ui/primitives/button";
 import { CURRENT_USER_ID } from "../api";
 import { DELETED_MESSAGE_LABEL } from "../constants";
+import { useAttachmentPicker } from "../hooks/useAttachmentPicker";
 import { useEditMessage } from "../hooks/useEditMessage";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { type ComposerFormValues, composerSchema } from "../schemas";
 import type { Message } from "../types";
 import { findLatestOwnMessage } from "../utils";
+import { AttachmentPreview } from "./AttachmentPreview";
 
 interface MessageComposerProps {
   conversationId: string;
@@ -40,6 +42,13 @@ export function MessageComposer({
 
   const sendMessageMutation = useSendMessage(conversationId);
   const editMessageMutation = useEditMessage(conversationId);
+  const {
+    inputRef: fileInputRef,
+    attachment,
+    openPicker,
+    handleFileChange,
+    clearAttachment,
+  } = useAttachmentPicker();
 
   const { register, handleSubmit, reset, setValue, watch } =
     useForm<ComposerFormValues>({
@@ -69,20 +78,23 @@ export function MessageComposer({
 
   const onSubmit = (data: ComposerFormValues) => {
     const text = data.text.trim();
-    if (!text) return;
 
     if (editingId && editingMessage) {
+      if (!text) return;
       editMessageMutation.mutate({ id: editingId, text });
       setEditingId(conversationId, null);
       setValue("text", draft);
     } else {
+      if (!text && !attachment) return;
       const id = crypto.randomUUID();
       sendMessageMutation.mutate({
         id,
         conversationId,
         text,
         replyToId: replyToId ?? undefined,
+        attachment: attachment ?? undefined,
       });
+      clearAttachment();
       clearDraft(conversationId);
       setReplyToId(conversationId, null);
       reset({ text: "" });
@@ -183,10 +195,37 @@ export function MessageComposer({
           </div>
         )}
 
+        {attachment && !editingMessage && (
+          <AttachmentPreview
+            attachment={attachment}
+            onRemove={clearAttachment}
+          />
+        )}
+
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex items-end gap-2"
         >
+          {!editingId && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                aria-label="Attach a file"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={openPicker}
+                aria-label="Attach file"
+              >
+                <Paperclip className="size-4" />
+              </Button>
+            </>
+          )}
           <textarea
             {...restRegister}
             ref={(node) => {
@@ -203,7 +242,7 @@ export function MessageComposer({
           <Button
             type="submit"
             size="icon"
-            disabled={!currentText || currentText.trim().length === 0}
+            disabled={!currentText?.trim() && !(attachment && !editingId)}
             aria-label={editingId ? "Save edited message" : "Send message"}
           >
             {editingId ? (

@@ -1,9 +1,8 @@
-import type { Message, MessageReaction } from "@/features/messages";
+import { type Message, mapMessage } from "@/features/messages";
 import {
   CURRENT_USER_ID,
   type MockConversation,
   type MockMessage,
-  type MockReaction,
   getConversations as mockGetConversations,
   markAsRead as mockMarkAsRead,
   subscribe as mockSubscribe,
@@ -14,28 +13,6 @@ import type { Conversation } from "./types";
 // means a real backend only changes this file.
 
 export { CURRENT_USER_ID };
-
-function mapReaction(r: MockReaction): MessageReaction {
-  return {
-    emoji: r.emoji,
-    userIds: [...r.userIds],
-  };
-}
-
-function mapMessage(msg: MockMessage): Message {
-  return {
-    id: msg.id,
-    conversationId: msg.conversationId,
-    senderId: msg.senderId,
-    text: msg.text,
-    createdAt: msg.createdAt,
-    status: msg.status,
-    replyToId: msg.replyToId,
-    editedAt: msg.editedAt,
-    deletedAt: msg.deletedAt,
-    reactions: msg.reactions?.map(mapReaction),
-  };
-}
 
 function mapConversation(conv: MockConversation): Conversation {
   return {
