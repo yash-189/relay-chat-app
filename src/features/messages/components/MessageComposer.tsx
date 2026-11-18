@@ -16,6 +16,10 @@ import type { Message } from "../types";
 import { findLatestOwnMessage } from "../utils";
 import { AttachmentPreview } from "./AttachmentPreview";
 
+function hasFinePointer() {
+  return window.matchMedia?.("(pointer: fine)").matches ?? false;
+}
+
 interface MessageComposerProps {
   conversationId: string;
   messages: Message[];
@@ -57,6 +61,12 @@ export function MessageComposer({
     });
 
   const currentText = watch("text");
+
+  const focusTarget = editingId ?? replyToId ?? conversationId;
+
+  useEffect(() => {
+    if (focusTarget && hasFinePointer()) textareaRef.current?.focus();
+  }, [focusTarget]);
 
   // load the saved draft when switching chats
   useEffect(() => {
