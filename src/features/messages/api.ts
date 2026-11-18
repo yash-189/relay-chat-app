@@ -11,6 +11,7 @@ import {
 } from "@/mocks";
 import type {
   Message,
+  MessageCursor,
   MessagePage,
   MessageReaction,
   SendMessageInput,
@@ -43,8 +44,7 @@ export function mapMessage(msg: MockMessage): Message {
 
 export async function getMessages(
   conversationId: string,
-  before: string | null,
-  limit: number,
+  { before, limit }: { before: MessageCursor; limit: number },
 ): Promise<MessagePage> {
   const result = await mockGetMessages(conversationId, { before, limit });
   return {

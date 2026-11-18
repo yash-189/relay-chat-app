@@ -21,6 +21,7 @@ vi.mock("@/features/messages", () => ({
   ChatPanel: ({ isGroup }: { isGroup: boolean }) => (
     <div>{isGroup ? "group panel" : "direct panel"}</div>
   ),
+  ChatPanelSkeleton: () => null,
   MessageSearchToggle: () => null,
   useTypingLabel: () => null,
 }));

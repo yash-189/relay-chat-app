@@ -32,9 +32,12 @@ export interface Message {
   attachment?: Attachment;
 }
 
+// id of the oldest loaded message; null asks for the newest page
+export type MessageCursor = string | null;
+
 export interface MessagePage {
   messages: Message[];
-  nextCursor: string | null;
+  nextCursor: MessageCursor;
 }
 
 export interface SendMessageInput {

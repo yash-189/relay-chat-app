@@ -1,7 +1,9 @@
 import { infiniteQueryOptions } from "@tanstack/react-query";
 import { getMessages } from "./api";
+import type { MessageCursor } from "./types";
 
 const PAGE_SIZE = 50;
+const STALE_TIME_MS = 60_000;
 
 export const messageKeys = {
   all: ["messages"] as const,
@@ -15,9 +17,9 @@ export const messageQueries = {
     infiniteQueryOptions({
       queryKey: messageKeys.list(conversationId),
       queryFn: ({ pageParam }) =>
-        getMessages(conversationId, pageParam, PAGE_SIZE),
-      initialPageParam: null as string | null,
+        getMessages(conversationId, { before: pageParam, limit: PAGE_SIZE }),
+      initialPageParam: null as MessageCursor,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-      staleTime: 60_000,
+      staleTime: STALE_TIME_MS,
     }),
 };

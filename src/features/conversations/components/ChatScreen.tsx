@@ -2,7 +2,11 @@
 
 import { notFound } from "next/navigation";
 import { GroupInfoButton } from "@/features/groups";
-import { ChatPanel, MessageSearchToggle } from "@/features/messages";
+import {
+  ChatPanel,
+  ChatPanelSkeleton,
+  MessageSearchToggle,
+} from "@/features/messages";
 import { useConversation } from "../hooks/useConversation";
 import {
   ConversationHeader,
@@ -16,7 +20,14 @@ interface ChatScreenProps {
 export function ChatScreen({ conversationId }: ChatScreenProps) {
   const { data: conversation, isPending } = useConversation(conversationId);
 
-  if (isPending) return <ConversationHeaderSkeleton />;
+  if (isPending) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <ConversationHeaderSkeleton />
+        <ChatPanelSkeleton />
+      </div>
+    );
+  }
   if (!conversation) notFound();
 
   const isGroup = conversation.type === "group";

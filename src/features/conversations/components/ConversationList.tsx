@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 
 import { EmptyState } from "@/ui/components/feedback/EmptyState";
 import { ErrorState } from "@/ui/components/feedback/ErrorState";
@@ -22,23 +23,41 @@ function getNoResultsMessage(query: string, filter: ConversationFilter) {
   return EMPTY_FILTER_MESSAGES[filter];
 }
 
-export function ConversationListSkeleton() {
+const PREVIEW_WIDTHS = ["w-3/4", "w-1/2", "w-2/3", "w-3/5", "w-4/5", "w-1/2"];
+
+// mirrors ConversationItem's box model so rows don't move when data arrives
+function ConversationRowsSkeleton() {
   return (
-    <div aria-busy="true" className="space-y-3 p-3">
+    <div aria-busy="true">
       <span className="sr-only">Loading conversations...</span>
-      {Array.from({ length: 6 }).map((_, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length placeholders never reorder
-        <div key={index} className="flex items-center gap-3 py-1.5">
-          <Skeleton className="size-10 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <div className="flex justify-between gap-2">
-              <Skeleton className="h-4 w-28" />
+      {PREVIEW_WIDTHS.map((width, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: fixed placeholders never reorder
+        <div key={index} className="flex items-center gap-3 px-3 py-3">
+          <Skeleton className="size-8 shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex h-5.5 items-center justify-between gap-2">
+              <Skeleton className="h-3.5 w-28" />
               <Skeleton className="h-3 w-10" />
             </div>
-            <Skeleton className="h-3 w-40" />
+            <div className="flex h-5 items-center">
+              <Skeleton className={cn("h-3", width)} />
+            </div>
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// the suspense fallback also draws the toolbar, so search and filters don't pop in
+export function ConversationListSkeleton() {
+  return (
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="shrink-0 space-y-2 border-b p-3 pb-2">
+        <Skeleton className="h-9 w-full rounded-md" />
+        <Skeleton className="h-8 w-full rounded-lg" />
+      </div>
+      <ConversationRowsSkeleton />
     </div>
   );
 }
@@ -65,7 +84,7 @@ function ConversationListContent({
   onRetry,
 }: ConversationListContentProps) {
   if (isLoading) {
-    return <ConversationListSkeleton />;
+    return <ConversationRowsSkeleton />;
   }
 
   if (isError) {
