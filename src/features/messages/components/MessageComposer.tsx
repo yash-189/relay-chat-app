@@ -22,6 +22,7 @@ function hasFinePointer() {
 
 interface MessageComposerProps {
   conversationId: string;
+  conversationName: string;
   messages: Message[];
   replyMessage?: Message | null;
   replySenderName?: string;
@@ -30,6 +31,7 @@ interface MessageComposerProps {
 
 export function MessageComposer({
   conversationId,
+  conversationName,
   messages,
   replyMessage,
   replySenderName,
@@ -245,7 +247,7 @@ export function MessageComposer({
             rows={1}
             onKeyDown={handleKeyDown}
             onChange={handleChange}
-            placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
+            placeholder={`Message ${conversationName}`}
             className="max-h-32 min-h-10 flex-1 resize-none rounded-lg border bg-muted/40 px-3 py-2 text-[0.9375rem] outline-none placeholder:text-muted-foreground focus:border-ring focus:bg-background focus:ring-1 focus:ring-ring"
             aria-label="Message text"
           />
@@ -262,6 +264,9 @@ export function MessageComposer({
             )}
           </Button>
         </form>
+        <p className="mt-1 hidden pl-11 text-muted-foreground text-xs md:block">
+          Enter to send · Shift+Enter for new line
+        </p>
       </div>
     </div>
   );

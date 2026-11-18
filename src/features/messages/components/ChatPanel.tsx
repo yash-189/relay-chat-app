@@ -75,10 +75,15 @@ function ChatMessageContent({
 
 interface ChatPanelProps {
   conversationId: string;
+  conversationName: string;
   isGroup: boolean;
 }
 
-export function ChatPanel({ conversationId, isGroup }: ChatPanelProps) {
+export function ChatPanel({
+  conversationId,
+  conversationName,
+  isGroup,
+}: ChatPanelProps) {
   const {
     data: messages,
     isLoading,
@@ -167,6 +172,7 @@ export function ChatPanel({ conversationId, isGroup }: ChatPanelProps) {
 
       <MessageComposer
         conversationId={conversationId}
+        conversationName={conversationName}
         messages={messages ?? []}
         replyMessage={replyMessage}
         replySenderName={replySenderName}

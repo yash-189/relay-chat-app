@@ -11,12 +11,19 @@ export type VirtualChatRow =
   | { type: "date-separator"; id: string; date: string }
   | { type: "message"; id: string; message: Message };
 
+function uses24HourClock(): boolean {
+  const { hourCycle } = new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+  }).resolvedOptions();
+  return hourCycle === "h23" || hourCycle === "h24";
+}
+
 export function formatMessageTime(isoString: string): string {
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return "";
 
   return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
+    hour: uses24HourClock() ? "2-digit" : "numeric",
     minute: "2-digit",
   }).format(date);
 }

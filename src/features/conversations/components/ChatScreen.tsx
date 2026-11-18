@@ -47,6 +47,7 @@ export function ChatScreen({ conversationId }: ChatScreenProps) {
       <ChatPanel
         key={conversation.id}
         conversationId={conversation.id}
+        conversationName={conversation.name}
         isGroup={isGroup}
       />
     </div>

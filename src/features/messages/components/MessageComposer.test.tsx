@@ -56,7 +56,11 @@ describe("MessageComposer", () => {
   it("submits message on Enter and clears textarea", async () => {
     const user = userEvent.setup();
     renderWithProviders(
-      <MessageComposer conversationId="conv-1" messages={messages} />,
+      <MessageComposer
+        conversationId="conv-1"
+        conversationName="Sarah Chen"
+        messages={messages}
+      />,
     );
 
     const textarea = screen.getByRole("textbox", { name: "Message text" });
@@ -76,7 +80,11 @@ describe("MessageComposer", () => {
     const user = userEvent.setup();
 
     renderWithProviders(
-      <MessageComposer conversationId="conv-1" messages={messages} />,
+      <MessageComposer
+        conversationId="conv-1"
+        conversationName="Sarah Chen"
+        messages={messages}
+      />,
     );
 
     const textarea = screen.getByRole("textbox", { name: "Message text" });
@@ -89,7 +97,11 @@ describe("MessageComposer", () => {
   it("disables send button when text is empty or only whitespace", async () => {
     const user = userEvent.setup();
     renderWithProviders(
-      <MessageComposer conversationId="conv-1" messages={messages} />,
+      <MessageComposer
+        conversationId="conv-1"
+        conversationName="Sarah Chen"
+        messages={messages}
+      />,
     );
 
     const sendButton = screen.getByRole("button", { name: "Send message" });
@@ -103,7 +115,11 @@ describe("MessageComposer", () => {
   it("edits the last own message on ArrowUp in empty composer", async () => {
     const user = userEvent.setup();
     renderWithProviders(
-      <MessageComposer conversationId="conv-1" messages={messages} />,
+      <MessageComposer
+        conversationId="conv-1"
+        conversationName="Sarah Chen"
+        messages={messages}
+      />,
     );
 
     const textarea = screen.getByRole("textbox", { name: "Message text" });
@@ -119,6 +135,7 @@ describe("MessageComposer", () => {
     renderWithProviders(
       <MessageComposer
         conversationId="conv-1"
+        conversationName="Sarah Chen"
         messages={messages}
         replyMessage={messages[0]}
         replySenderName="Sarah"
