@@ -1,5 +1,7 @@
 # Relay
 
+**Live demo:** https://relay-chat-app-swart.vercel.app
+
 A chat app inspired by WhatsApp Web and Slack: direct and group conversations, live typing, read receipts, reactions, replies and attachments. There is no backend. A mock chat server runs in the browser and simulates the other users.
 
 Built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, TanStack Query, Zustand, React Hook Form, Zod, Lucide and Vitest.
