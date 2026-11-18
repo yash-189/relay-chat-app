@@ -128,6 +128,18 @@ describe("messages utils", () => {
       expect(updated).toEqual([{ emoji: "👍", userIds: ["user-1", "user-2"] }]);
     });
 
+    it("replaces the user's previous reaction with the new one", () => {
+      const initial: MessageReaction[] = [
+        { emoji: "👍", userIds: ["user-1", "user-2"] },
+      ];
+      const updated = toggleReaction(initial, "🔥", "user-2");
+
+      expect(updated).toEqual([
+        { emoji: "👍", userIds: ["user-1"] },
+        { emoji: "🔥", userIds: ["user-2"] },
+      ]);
+    });
+
     it("removes user when user already reacted", () => {
       const initial: MessageReaction[] = [
         { emoji: "👍", userIds: ["user-1", "user-2"] },

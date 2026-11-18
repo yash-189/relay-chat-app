@@ -5,17 +5,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/ui/primitives/avatar";
 import { CURRENT_USER_ID } from "../api";
 import { DELETED_MESSAGE_LABEL, MessageStatusLabels } from "../constants";
 import type { Message, MessageStatus } from "../types";
-import { formatMessageTime } from "../utils";
+import { findUserReaction, formatMessageTime } from "../utils";
 import { MessageActions } from "./MessageActions";
 import { ReplyPreview } from "./ReplyPreview";
 
 const EDITED_LABEL = "edited";
 
 const StatusIcons = {
-  sending: { Icon: Clock, className: "size-3 text-muted-foreground" },
-  sent: { Icon: Check, className: "size-3 text-muted-foreground" },
-  delivered: { Icon: CheckCheck, className: "size-3.5 text-muted-foreground" },
-  read: { Icon: CheckCheck, className: "size-3.5 text-primary" },
+  sending: { Icon: Clock, className: "size-3" },
+  sent: { Icon: Check, className: "size-3" },
+  delivered: { Icon: CheckCheck, className: "size-3.5" },
+  read: { Icon: CheckCheck, className: "size-3.5 text-read" },
   failed: { Icon: AlertCircle, className: "size-3 text-destructive" },
 } satisfies Record<MessageStatus, { Icon: LucideIcon; className: string }>;
 
@@ -62,7 +62,7 @@ function MessageReactions({
   if (!reactions?.length) return null;
 
   return (
-    <div className="flex flex-wrap gap-1 pt-0.5">
+    <div className="relative z-10 -mt-2 flex flex-wrap gap-1 px-2">
       {reactions.map((r) => {
         const hasReacted = r.userIds.includes(CURRENT_USER_ID);
         return (
@@ -72,10 +72,10 @@ function MessageReactions({
             onClick={() => onToggleReaction(r.emoji)}
             aria-label={`${r.emoji} ${r.userIds.length}`}
             className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs transition-colors",
+              "fade-in zoom-in-75 inline-flex animate-in items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs shadow-xs transition-colors duration-150",
               hasReacted
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border bg-background hover:bg-muted",
+                ? "border-primary bg-card text-primary"
+                : "border-border bg-card hover:bg-muted",
             )}
           >
             <span>{r.emoji}</span>
@@ -211,7 +211,7 @@ export function MessageBubble({
 
       <div
         className={cn(
-          "relative flex max-w-4/5 flex-col gap-1 sm:max-w-2/3",
+          "relative flex max-w-4/5 flex-col lg:max-w-3/5",
           isOwn ? "items-end" : "items-start",
         )}
       >
@@ -229,6 +229,10 @@ export function MessageBubble({
               onEdit={isOwn ? onEdit : undefined}
               onDelete={isOwn ? onDelete : undefined}
               onReact={onToggleReaction}
+              selectedEmoji={findUserReaction(
+                message.reactions,
+                CURRENT_USER_ID,
+              )}
             />
           </div>
         )}
@@ -257,11 +261,11 @@ export function MessageBubble({
           )}
 
           {isDeleted ? (
-            <p className="text-muted-foreground text-sm italic">
+            <p className="text-[0.9375rem] text-muted-foreground italic">
               {DELETED_MESSAGE_LABEL}
             </p>
           ) : (
-            <p className="whitespace-pre-wrap break-words text-sm selection:bg-background/20">
+            <p className="whitespace-pre-wrap break-words text-[0.9375rem] leading-snug selection:bg-background/20">
               {message.text}
             </p>
           )}

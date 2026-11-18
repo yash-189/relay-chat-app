@@ -10,6 +10,7 @@ interface MessageActionsProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onReact: (emoji: string) => void;
+  selectedEmoji?: string | null;
 }
 
 export function MessageActions({
@@ -19,6 +20,7 @@ export function MessageActions({
   onEdit,
   onDelete,
   onReact,
+  selectedEmoji,
 }: MessageActionsProps) {
   const [showReactions, setShowReactions] = useState(false);
   const { copy } = useCopyToClipboard();
@@ -28,6 +30,7 @@ export function MessageActions({
       {showReactions && (
         <div className="absolute -top-10 right-0 z-10">
           <ReactionBar
+            selectedEmoji={selectedEmoji}
             onSelect={(emoji) => {
               onReact(emoji);
               setShowReactions(false);

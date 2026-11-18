@@ -128,26 +128,30 @@ export function findLatestOwnMessage(
   return null;
 }
 
+export function findUserReaction(
+  reactions: MessageReaction[] = [],
+  userId: string,
+): string | null {
+  return reactions.find((r) => r.userIds.includes(userId))?.emoji ?? null;
+}
+
+// one reaction per user: picking the same emoji removes it, a new one replaces it
 export function toggleReaction(
   reactions: MessageReaction[] = [],
   emoji: string,
   userId: string,
 ): MessageReaction[] {
-  const existing = reactions.find((r) => r.emoji === emoji);
+  const isSameEmoji = findUserReaction(reactions, userId) === emoji;
+  const withoutUser = reactions
+    .map((r) => ({ ...r, userIds: r.userIds.filter((id) => id !== userId) }))
+    .filter((r) => r.userIds.length > 0);
 
-  if (!existing) {
-    return [...reactions, { emoji, userIds: [userId] }];
-  }
+  if (isSameEmoji) return withoutUser;
 
-  const nextUserIds = existing.userIds.includes(userId)
-    ? existing.userIds.filter((id) => id !== userId)
-    : [...existing.userIds, userId];
+  const existing = withoutUser.find((r) => r.emoji === emoji);
+  if (!existing) return [...withoutUser, { emoji, userIds: [userId] }];
 
-  if (nextUserIds.length === 0) {
-    return reactions.filter((r) => r.emoji !== emoji);
-  }
-
-  return reactions.map((r) =>
-    r.emoji === emoji ? { ...r, userIds: nextUserIds } : r,
+  return withoutUser.map((r) =>
+    r.emoji === emoji ? { ...r, userIds: [...r.userIds, userId] } : r,
   );
 }

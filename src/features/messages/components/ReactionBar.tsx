@@ -2,12 +2,17 @@ import { cn } from "@/lib/utils";
 
 interface ReactionBarProps {
   onSelect: (emoji: string) => void;
+  selectedEmoji?: string | null;
   className?: string;
 }
 
 const EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🔥"] as const;
 
-export function ReactionBar({ onSelect, className }: ReactionBarProps) {
+export function ReactionBar({
+  onSelect,
+  selectedEmoji,
+  className,
+}: ReactionBarProps) {
   return (
     <div
       role="toolbar"
@@ -23,7 +28,11 @@ export function ReactionBar({ onSelect, className }: ReactionBarProps) {
           type="button"
           onClick={() => onSelect(emoji)}
           aria-label={`React with ${emoji}`}
-          className="flex size-7 items-center justify-center rounded-full text-sm transition-transform hover:scale-125 hover:bg-muted active:scale-95"
+          aria-pressed={emoji === selectedEmoji}
+          className={cn(
+            "flex size-7 items-center justify-center rounded-full text-sm transition-transform hover:scale-125 hover:bg-muted active:scale-95",
+            emoji === selectedEmoji && "bg-primary/15 ring-1 ring-primary",
+          )}
         >
           {emoji}
         </button>
