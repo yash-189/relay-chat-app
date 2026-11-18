@@ -14,6 +14,9 @@ vi.mock("next/navigation", () => ({ notFound: () => notFound() }));
 vi.mock("../hooks/useConversation", () => ({
   useConversation: () => result,
 }));
+vi.mock("@/features/groups", () => ({
+  GroupInfoButton: () => <button type="button">Group info</button>,
+}));
 vi.mock("@/features/messages", () => ({
   ChatPanel: ({ isGroup }: { isGroup: boolean }) => (
     <div>{isGroup ? "group panel" : "direct panel"}</div>
@@ -70,5 +73,8 @@ describe("ChatScreen", () => {
 
     expect(screen.getByText("Frontend Architecture")).toBeInTheDocument();
     expect(screen.getByText("group panel")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Group info" }),
+    ).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import {
   markAsRead,
+  onMembersChange,
   onMessageUpdated,
   onNewMessage,
   onPresenceChange,
@@ -13,6 +14,7 @@ import { conversationKeys, conversationQueries } from "../queries";
 import type { Conversation } from "../types";
 import {
   applyIncomingMessage,
+  applyMembersChange,
   applyPresenceChange,
   applyUpdatedMessage,
 } from "../utils";
@@ -68,7 +70,18 @@ export function useConversations() {
       );
     });
 
+    const unsubMembers = onMembersChange(
+      ({ conversationId, participantIds }) => {
+        queryClient.setQueryData<Conversation[]>(
+          conversationKeys.lists(),
+          (old) =>
+            old && applyMembersChange(old, conversationId, participantIds),
+        );
+      },
+    );
+
     return () => {
+      unsubMembers();
       unsubMessage();
       unsubUpdated();
       unsubPresence();

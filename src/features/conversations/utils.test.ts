@@ -5,7 +5,6 @@ import {
   applyIncomingMessage,
   applyPresenceChange,
   formatLastMessageTime,
-  getInitials,
 } from "./utils";
 
 describe("live-update cache logic", () => {
@@ -182,14 +181,5 @@ describe("formatLastMessageTime", () => {
     expect(formatLastMessageTime(newYearsEve, firstOfJan)).toBe("Yesterday");
     expect(formatLastMessageTime(earlierToday, firstOfJan)).toBe("5h ago");
     expect(formatLastMessageTime(fourDaysAgo, firstOfJan)).toBe("4d ago");
-  });
-});
-
-describe("getInitials", () => {
-  it("extracts initials correctly", () => {
-    expect(getInitials("Sarah Chen")).toBe("SC");
-    expect(getInitials("Engineering Frontend Architecture")).toBe("EA");
-    expect(getInitials("Alex")).toBe("AL");
-    expect(getInitials("")).toBe("?");
   });
 });

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { Routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { getInitials } from "@/shared/utils/getInitials";
 import {
   Avatar,
   AvatarBadge,
@@ -14,11 +15,7 @@ import {
 import { Badge } from "@/ui/primitives/badge";
 import { CURRENT_USER_ID } from "../api";
 import type { Conversation } from "../types";
-import {
-  formatConversationPreview,
-  formatLastMessageTime,
-  getInitials,
-} from "../utils";
+import { formatConversationPreview, formatLastMessageTime } from "../utils";
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -78,7 +75,7 @@ export function ConversationItem({
                 data-testid="group-icon"
               />
             )}
-            <span className="truncate font-medium text-foreground text-sm">
+            <span className="truncate font-medium text-[0.9375rem] text-foreground">
               {conversation.name}
             </span>
           </div>
@@ -93,7 +90,7 @@ export function ConversationItem({
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="min-h-4.5 truncate text-muted-foreground text-xs">
+          <p className="min-h-5 truncate text-muted-foreground text-sm">
             {previewText}
           </p>
           {conversation.unreadCount > 0 && (

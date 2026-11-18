@@ -6,10 +6,10 @@ import type { ReactNode } from "react";
 import { useTypingLabel } from "@/features/messages";
 import { Routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { getInitials } from "@/shared/utils/getInitials";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/primitives/avatar";
 import { Skeleton } from "@/ui/primitives/skeleton";
 import type { Conversation } from "../types";
-import { getInitials } from "../utils";
 
 const HEADER_CLASS =
   "flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background px-4";

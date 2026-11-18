@@ -79,3 +79,12 @@ export function onPresenceChange(
 ) {
   return mockSubscribe("presence:change", handler);
 }
+
+export function onMembersChange(
+  handler: (change: {
+    conversationId: string;
+    participantIds: string[];
+  }) => void,
+) {
+  return mockSubscribe("members:change", handler);
+}

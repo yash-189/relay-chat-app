@@ -54,13 +54,6 @@ export function formatLastMessageTime(
   return formatDate(isoDate);
 }
 
-export function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 // moves the chat to the top. unread goes up only if the chat isn't open.
 export function applyIncomingMessage(
   conversations: Conversation[],
@@ -132,4 +125,14 @@ export function formatConversationPreview(
   if (message.deletedAt) return DELETED_MESSAGE_LABEL;
   if (message.senderId === currentUserId) return `You: ${message.text}`;
   return message.text;
+}
+
+export function applyMembersChange(
+  conversations: Conversation[],
+  conversationId: string,
+  participantIds: string[],
+): Conversation[] {
+  return conversations.map((conv) =>
+    conv.id === conversationId ? { ...conv, participantIds } : conv,
+  );
 }
