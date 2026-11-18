@@ -5,6 +5,7 @@ import {
   SEED_USERS,
 } from "./data";
 import { chatEmitter } from "./emitter";
+import { loadSnapshot, scheduleSave } from "./storage";
 import type {
   MockConversation,
   MockMessage,
@@ -14,23 +15,34 @@ import type {
   SendMessageInput,
 } from "./types";
 
-// in-memory store for the mock server. it resets on page reload.
+// in-memory store for the mock server, saved to indexeddb so it survives reloads
 
 const MIN_LATENCY_MS = 300;
 const MAX_LATENCY_MS = 600;
 
-const users: MockUser[] = SEED_USERS.map((user) => ({ ...user }));
+let users: MockUser[] = SEED_USERS.map((user) => ({ ...user }));
 let conversations: MockConversation[] = SEED_CONVERSATIONS.map((c) => ({
   ...c,
   lastMessage: c.lastMessage ? { ...c.lastMessage } : null,
   participantIds: [...c.participantIds],
 }));
-const messages: MockMessage[] = ALL_INITIAL_MESSAGES.map((m) => ({
+let messages: MockMessage[] = ALL_INITIAL_MESSAGES.map((m) => ({
   ...m,
   reactions: m.reactions
     ? m.reactions.map((r) => ({ ...r, userIds: [...r.userIds] }))
     : undefined,
 }));
+
+const hydrated = loadSnapshot().then((snapshot) => {
+  if (!snapshot) return;
+  users = snapshot.users;
+  conversations = snapshot.conversations;
+  messages = snapshot.messages;
+});
+
+function save() {
+  scheduleSave(() => ({ users, conversations, messages }));
+}
 
 let shouldFailNextSend = false;
 
@@ -40,7 +52,9 @@ export function failNextSendMessage(): void {
 
 const fakeLatency = (min = MIN_LATENCY_MS, max = MAX_LATENCY_MS) => {
   const duration = Math.floor(min + Math.random() * (max - min));
-  return new Promise<void>((resolve) => setTimeout(resolve, duration));
+  return hydrated.then(
+    () => new Promise<void>((resolve) => setTimeout(resolve, duration)),
+  );
 };
 
 export async function getUsers(): Promise<MockUser[]> {
@@ -84,6 +98,7 @@ export async function markAsRead(
   if (!conv) return null;
 
   conv.unreadCount = 0;
+  save();
   return { ...conv };
 }
 
@@ -142,6 +157,7 @@ export async function sendMessage(
     conversations = [conv, ...conversations.filter((c) => c.id !== conv.id)];
   }
 
+  save();
   chatEmitter.emit("message:new", { ...newMessage });
 
   return { ...newMessage };
@@ -163,6 +179,7 @@ export async function editMessage(
     conv.lastMessage = { ...message };
   }
 
+  save();
   chatEmitter.emit("message:updated", { ...message });
   return { ...message };
 }
@@ -180,6 +197,7 @@ export async function deleteMessage(id: string): Promise<MockMessage | null> {
     conv.lastMessage = { ...message };
   }
 
+  save();
   chatEmitter.emit("message:updated", { ...message });
   return { ...message };
 }
@@ -206,6 +224,7 @@ export async function toggleReaction(
   if (!hadSameEmoji && !existing)
     withoutUser.push({ emoji, userIds: [userId] });
   message.reactions = withoutUser;
+  save();
   chatEmitter.emit("message:updated", { ...message });
   return { ...message };
 }
@@ -220,6 +239,7 @@ function findGroup(conversationId: string): MockConversation {
 
 function setParticipants(conversation: MockConversation, ids: string[]) {
   conversation.participantIds = ids;
+  save();
   chatEmitter.emit("members:change", {
     conversationId: conversation.id,
     participantIds: [...ids],
@@ -271,6 +291,7 @@ export function insertIncomingMessage(message: MockMessage): void {
   conv.unreadCount += 1;
 
   conversations = [conv, ...conversations.filter((c) => c.id !== conv.id)];
+  save();
 }
 
 export function toggleUserOnline(userId: string): boolean | null {
@@ -295,5 +316,6 @@ export function updateMessageStatus(
   const message = messages.find((m) => m.id === messageId);
   if (!message) return null;
   message.status = status;
+  save();
   return { ...message };
 }
