@@ -1,5 +1,6 @@
 export { CURRENT_USER_ID } from "./data";
 export {
+  addMember,
   deleteMessage,
   editMessage,
   failNextSendMessage,
@@ -7,6 +8,7 @@ export {
   getMessages,
   getUsers,
   markAsRead,
+  removeMember,
   sendMessage,
   toggleReaction,
 } from "./db";

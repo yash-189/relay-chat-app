@@ -58,6 +58,10 @@ export interface ChatEvents {
     userId: string;
     isOnline: boolean;
   };
+  "members:change": {
+    conversationId: string;
+    participantIds: string[];
+  };
   typing: {
     conversationId: string;
     userId: string;

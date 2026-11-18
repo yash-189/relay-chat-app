@@ -182,19 +182,65 @@ export async function toggleReaction(
   const message = messages.find((m) => m.id === messageId);
   if (!message) return null;
 
+  // one reaction per user, so drop theirs before adding the new one
   const reactions = message.reactions ?? [];
-  const existing = reactions.find((r) => r.emoji === emoji);
-  const userIds = existing?.userIds.includes(userId)
-    ? existing.userIds.filter((id) => id !== userId)
-    : [...(existing?.userIds ?? []), userId];
-  const others = reactions.filter((r) => r.emoji !== emoji);
-  const nextReactions = userIds.length
-    ? [...others, { emoji, userIds }]
-    : others;
+  const hadSameEmoji = reactions.some(
+    (r) => r.emoji === emoji && r.userIds.includes(userId),
+  );
+  const withoutUser = reactions
+    .map((r) => ({ ...r, userIds: r.userIds.filter((id) => id !== userId) }))
+    .filter((r) => r.userIds.length > 0);
+  const existing = withoutUser.find((r) => r.emoji === emoji);
 
-  message.reactions = nextReactions;
+  if (!hadSameEmoji && existing) existing.userIds.push(userId);
+  if (!hadSameEmoji && !existing)
+    withoutUser.push({ emoji, userIds: [userId] });
+  message.reactions = withoutUser;
   chatEmitter.emit("message:updated", { ...message });
   return { ...message };
+}
+
+function findGroup(conversationId: string): MockConversation {
+  const conversation = conversations.find((c) => c.id === conversationId);
+  if (!conversation || conversation.type !== "group") {
+    throw new Error("Group not found");
+  }
+  return conversation;
+}
+
+function setParticipants(conversation: MockConversation, ids: string[]) {
+  conversation.participantIds = ids;
+  chatEmitter.emit("members:change", {
+    conversationId: conversation.id,
+    participantIds: [...ids],
+  });
+  return [...ids];
+}
+
+export async function addMember(
+  conversationId: string,
+  userId: string,
+): Promise<string[]> {
+  await fakeLatency();
+  const group = findGroup(conversationId);
+  if (!users.some((u) => u.id === userId)) throw new Error("User not found");
+  if (group.participantIds.includes(userId)) return [...group.participantIds];
+  return setParticipants(group, [...group.participantIds, userId]);
+}
+
+export async function removeMember(
+  conversationId: string,
+  userId: string,
+): Promise<string[]> {
+  await fakeLatency();
+  const group = findGroup(conversationId);
+  if (userId === CURRENT_USER_ID) {
+    throw new Error("You can't remove yourself from a group");
+  }
+  return setParticipants(
+    group,
+    group.participantIds.filter((id) => id !== userId),
+  );
 }
 
 // direct access for the simulator, which writes without fake latency
