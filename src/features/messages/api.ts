@@ -9,7 +9,12 @@ import {
   subscribe as mockSubscribe,
   toggleReaction as mockToggleReaction,
 } from "@/mocks";
-import type { Message, MessageReaction, SendMessageInput } from "./types";
+import type {
+  Message,
+  MessagePage,
+  MessageReaction,
+  SendMessageInput,
+} from "./types";
 
 export { CURRENT_USER_ID };
 
@@ -36,9 +41,16 @@ export function mapMessage(msg: MockMessage): Message {
   };
 }
 
-export async function getMessages(conversationId: string): Promise<Message[]> {
-  const result = await mockGetMessages(conversationId);
-  return result.map(mapMessage);
+export async function getMessages(
+  conversationId: string,
+  before: string | null,
+  limit: number,
+): Promise<MessagePage> {
+  const result = await mockGetMessages(conversationId, { before, limit });
+  return {
+    messages: result.messages.map(mapMessage),
+    nextCursor: result.nextCursor,
+  };
 }
 
 export async function sendMessage(input: SendMessageInput): Promise<Message> {

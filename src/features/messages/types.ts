@@ -32,6 +32,11 @@ export interface Message {
   attachment?: Attachment;
 }
 
+export interface MessagePage {
+  messages: Message[];
+  nextCursor: string | null;
+}
+
 export interface SendMessageInput {
   id: string;
   conversationId: string;

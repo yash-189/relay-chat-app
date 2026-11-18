@@ -2,8 +2,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toggleReaction as apiToggleReaction, CURRENT_USER_ID } from "../api";
+import { updateCachedMessages } from "../cache";
 import { messageKeys } from "../queries";
-import type { Message } from "../types";
 import { toggleReaction } from "../utils";
 
 export function useToggleReaction(conversationId: string) {
@@ -17,25 +17,19 @@ export function useToggleReaction(conversationId: string) {
         queryKey: messageKeys.list(conversationId),
       });
 
-      const previous = queryClient.getQueryData<Message[]>(
+      const previous = queryClient.getQueryData(
         messageKeys.list(conversationId),
       );
 
-      queryClient.setQueryData<Message[]>(
-        messageKeys.list(conversationId),
-        (old = []) =>
-          old.map((m) =>
-            m.id === messageId
-              ? {
-                  ...m,
-                  reactions: toggleReaction(
-                    m.reactions,
-                    emoji,
-                    CURRENT_USER_ID,
-                  ),
-                }
-              : m,
-          ),
+      updateCachedMessages(queryClient, conversationId, (old = []) =>
+        old.map((m) =>
+          m.id === messageId
+            ? {
+                ...m,
+                reactions: toggleReaction(m.reactions, emoji, CURRENT_USER_ID),
+              }
+            : m,
+        ),
       );
 
       return { previous };
@@ -50,9 +44,8 @@ export function useToggleReaction(conversationId: string) {
     },
     onSuccess: (saved) => {
       if (!saved) return;
-      queryClient.setQueryData<Message[]>(
-        messageKeys.list(conversationId),
-        (old = []) => old.map((m) => (m.id === saved.id ? saved : m)),
+      updateCachedMessages(queryClient, conversationId, (old = []) =>
+        old.map((m) => (m.id === saved.id ? saved : m)),
       );
     },
   });

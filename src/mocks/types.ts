@@ -31,6 +31,11 @@ export interface MockMessage {
   attachment?: MockAttachment;
 }
 
+export interface MockMessagePage {
+  messages: MockMessage[];
+  nextCursor: string | null;
+}
+
 export interface SendMessageInput {
   id: string;
   conversationId: string;

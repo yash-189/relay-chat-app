@@ -10,7 +10,7 @@ import { useMessages } from "../hooks/useMessages";
 import type { Message } from "../types";
 import { searchMatchingMessageIds } from "../utils";
 import { MessageComposer } from "./MessageComposer";
-import { MessageList } from "./MessageList";
+import { MessageList, type OlderMessages } from "./MessageList";
 import { MessageListSkeleton } from "./MessageListSkeleton";
 import { MessageSearch } from "./MessageSearch";
 
@@ -21,6 +21,7 @@ interface ChatMessageContentProps {
   conversationId: string;
   isGroup: boolean;
   highlightedMessageId?: string;
+  olderMessages: OlderMessages;
   onRetry: () => void;
 }
 
@@ -31,6 +32,7 @@ function ChatMessageContent({
   conversationId,
   isGroup,
   highlightedMessageId,
+  olderMessages,
   onRetry,
 }: ChatMessageContentProps) {
   if (isLoading) {
@@ -66,6 +68,7 @@ function ChatMessageContent({
       messages={messages}
       isGroup={isGroup}
       highlightedMessageId={highlightedMessageId}
+      olderMessages={olderMessages}
     />
   );
 }
@@ -81,6 +84,9 @@ export function ChatPanel({ conversationId, isGroup }: ChatPanelProps) {
     isLoading,
     isError,
     refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = useMessages(conversationId);
   const { userMap } = useUsers();
 
@@ -151,6 +157,11 @@ export function ChatPanel({ conversationId, isGroup }: ChatPanelProps) {
         conversationId={conversationId}
         isGroup={isGroup}
         highlightedMessageId={matches[currentMatchIndex]}
+        olderMessages={{
+          hasMore: hasNextPage,
+          isLoading: isFetchingNextPage,
+          load: () => fetchNextPage(),
+        }}
         onRetry={() => refetch()}
       />
 

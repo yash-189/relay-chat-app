@@ -2,8 +2,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteMessage } from "../api";
+import { updateCachedMessages } from "../cache";
 import { messageKeys } from "../queries";
-import type { Message } from "../types";
 
 export function useDeleteMessage(conversationId: string) {
   const queryClient = useQueryClient();
@@ -15,22 +15,20 @@ export function useDeleteMessage(conversationId: string) {
         queryKey: messageKeys.list(conversationId),
       });
 
-      const previous = queryClient.getQueryData<Message[]>(
+      const previous = queryClient.getQueryData(
         messageKeys.list(conversationId),
       );
 
-      queryClient.setQueryData<Message[]>(
-        messageKeys.list(conversationId),
-        (old = []) =>
-          old.map((m) =>
-            m.id === id
-              ? {
-                  ...m,
-                  deletedAt: new Date().toISOString(),
-                  text: "",
-                }
-              : m,
-          ),
+      updateCachedMessages(queryClient, conversationId, (old = []) =>
+        old.map((m) =>
+          m.id === id
+            ? {
+                ...m,
+                deletedAt: new Date().toISOString(),
+                text: "",
+              }
+            : m,
+        ),
       );
 
       return { previous };
@@ -45,9 +43,8 @@ export function useDeleteMessage(conversationId: string) {
     },
     onSuccess: (saved) => {
       if (!saved) return;
-      queryClient.setQueryData<Message[]>(
-        messageKeys.list(conversationId),
-        (old = []) => old.map((m) => (m.id === saved.id ? saved : m)),
+      updateCachedMessages(queryClient, conversationId, (old = []) =>
+        old.map((m) => (m.id === saved.id ? saved : m)),
       );
     },
   });

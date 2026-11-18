@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CURRENT_USER_ID, sendMessage } from "../api";
+import { updateCachedMessages } from "../cache";
 import { messageKeys } from "../queries";
 import type { Message, SendMessageInput } from "../types";
 
@@ -26,30 +27,23 @@ export function useSendMessage(conversationId: string) {
         attachment: input.attachment,
       };
 
-      queryClient.setQueryData<Message[]>(
-        messageKeys.list(conversationId),
-        (old = []) => {
-          // a retry reuses the failed message's id, so replace instead of append
-          if (old.some((m) => m.id === input.id)) {
-            return old.map((m) => (m.id === input.id ? optimisticMessage : m));
-          }
-          return [...old, optimisticMessage];
-        },
-      );
+      updateCachedMessages(queryClient, conversationId, (old = []) => {
+        // a retry reuses the failed message's id, so replace instead of append
+        if (old.some((m) => m.id === input.id)) {
+          return old.map((m) => (m.id === input.id ? optimisticMessage : m));
+        }
+        return [...old, optimisticMessage];
+      });
     },
     onError: (_err, input) => {
       // keep the message as failed instead of dropping it, so it can be retried
-      queryClient.setQueryData<Message[]>(
-        messageKeys.list(conversationId),
-        (old = []) =>
-          old.map((m) => (m.id === input.id ? { ...m, status: "failed" } : m)),
+      updateCachedMessages(queryClient, conversationId, (old = []) =>
+        old.map((m) => (m.id === input.id ? { ...m, status: "failed" } : m)),
       );
     },
     onSuccess: (savedMessage) => {
-      queryClient.setQueryData<Message[]>(
-        messageKeys.list(conversationId),
-        (old = []) =>
-          old.map((m) => (m.id === savedMessage.id ? savedMessage : m)),
+      updateCachedMessages(queryClient, conversationId, (old = []) =>
+        old.map((m) => (m.id === savedMessage.id ? savedMessage : m)),
       );
     },
   });

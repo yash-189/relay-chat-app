@@ -12,21 +12,20 @@ import { isNearBottom } from "../utils";
 
 interface UseAutoScrollOptions {
   containerRef: RefObject<HTMLDivElement | null>;
-  totalItems: number;
+  newestKey: string | undefined;
   contentHeight: number;
   onScrollToBottom?: () => void;
 }
 
 export function useAutoScroll({
   containerRef,
-  totalItems,
+  newestKey,
   contentHeight,
   onScrollToBottom,
 }: UseAutoScrollOptions) {
   const [hasNewMessagesBelow, setHasNewMessagesBelow] = useState(false);
   const wasNearBottomRef = useRef(true);
-  const prevCountRef = useRef(totalItems);
-  const isInitialMountRef = useRef(true);
+  const prevNewestKeyRef = useRef<string | undefined>(undefined);
 
   const checkNearBottom = useCallback(() => {
     const el = containerRef.current;
@@ -67,27 +66,23 @@ export function useAutoScroll({
     el.scrollTop = el.scrollHeight;
   }, [containerRef, contentHeight]);
 
+  // keyed on the newest message, not the count, so loading older pages
+  // above doesn't look like a new message arriving
   useEffect(() => {
-    if (totalItems === 0) return;
+    if (!newestKey || newestKey === prevNewestKeyRef.current) return;
+    const isFirstLoad = prevNewestKeyRef.current === undefined;
+    prevNewestKeyRef.current = newestKey;
 
-    if (isInitialMountRef.current) {
-      isInitialMountRef.current = false;
-      prevCountRef.current = totalItems;
+    if (isFirstLoad) {
       scrollToBottom("auto");
       return;
     }
-
-    const added = totalItems > prevCountRef.current;
-    prevCountRef.current = totalItems;
-
-    if (!added) return;
-
     if (wasNearBottomRef.current) {
       scrollToBottom("smooth");
-    } else {
-      setHasNewMessagesBelow(true);
+      return;
     }
-  }, [totalItems, scrollToBottom]);
+    setHasNewMessagesBelow(true);
+  }, [newestKey, scrollToBottom]);
 
   return {
     hasNewMessagesBelow,

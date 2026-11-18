@@ -20,6 +20,7 @@ export type {
   MockConversation,
   MockConversationType,
   MockMessage,
+  MockMessagePage,
   MockMessageStatus,
   MockReaction,
   MockUser,

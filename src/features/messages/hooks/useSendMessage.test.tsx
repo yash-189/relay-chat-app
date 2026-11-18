@@ -3,8 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { failNextSendMessage } from "@/mocks";
-import { messageKeys } from "../queries";
-import type { Message } from "../types";
+import { getCachedMessages } from "../cache";
 import { useSendMessage } from "./useSendMessage";
 
 function createHookWrapper() {
@@ -38,9 +37,7 @@ describe("useSendMessage", () => {
     });
 
     await waitFor(() => {
-      const cached = queryClient.getQueryData<Message[]>(
-        messageKeys.list("conv-1"),
-      );
+      const cached = getCachedMessages(queryClient, "conv-1");
       expect(cached).toBeDefined();
     });
 
@@ -48,9 +45,7 @@ describe("useSendMessage", () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    const cachedAfter = queryClient.getQueryData<Message[]>(
-      messageKeys.list("conv-1"),
-    );
+    const cachedAfter = getCachedMessages(queryClient, "conv-1");
     const saved = cachedAfter?.find((m) => m.id === "msg-test-1");
     expect(saved?.status).toBe("sent");
   });
@@ -75,9 +70,7 @@ describe("useSendMessage", () => {
       expect(result.current.isError).toBe(true);
     });
 
-    const cached = queryClient.getQueryData<Message[]>(
-      messageKeys.list("conv-1"),
-    );
+    const cached = getCachedMessages(queryClient, "conv-1");
     const failedMsg = cached?.find((m) => m.id === "msg-fail-test");
     expect(failedMsg?.status).toBe("failed");
   });

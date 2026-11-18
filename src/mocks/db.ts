@@ -8,6 +8,7 @@ import { chatEmitter } from "./emitter";
 import type {
   MockConversation,
   MockMessage,
+  MockMessagePage,
   MockMessageStatus,
   MockUser,
   SendMessageInput,
@@ -86,17 +87,26 @@ export async function markAsRead(
   return { ...conv };
 }
 
+// cursor is the id of the oldest message the client already has
 export async function getMessages(
   conversationId: string,
-): Promise<MockMessage[]> {
+  { before, limit }: { before?: string | null; limit: number },
+): Promise<MockMessagePage> {
   await fakeLatency();
-  return messages
+  const sorted = messages
     .filter((m) => m.conversationId === conversationId)
     .sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    )
-    .map((m) => ({ ...m }));
+    );
+
+  const end = before ? sorted.findIndex((m) => m.id === before) : sorted.length;
+  const start = Math.max(0, end - limit);
+
+  return {
+    messages: sorted.slice(start, end).map((m) => ({ ...m })),
+    nextCursor: start > 0 ? sorted[start].id : null,
+  };
 }
 
 export async function sendMessage(

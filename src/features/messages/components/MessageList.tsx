@@ -1,8 +1,8 @@
 "use client";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { ChevronDown } from "lucide-react";
-import { useMemo, useRef } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import type { User } from "@/features/users";
 import { useUsers } from "@/features/users";
 import { useChatStore } from "@/store/chat.store";
@@ -16,11 +16,21 @@ import type { Message } from "../types";
 import { flattenMessagesWithDates, groupByDate } from "../utils";
 import { MessageBubble } from "./MessageBubble";
 
+// older pages load when the reader scrolls near the top
+const LOAD_OLDER_THRESHOLD_PX = 300;
+
+export interface OlderMessages {
+  hasMore: boolean;
+  isLoading: boolean;
+  load: () => void;
+}
+
 interface MessageListProps {
   conversationId: string;
   messages: Message[];
   isGroup: boolean;
   highlightedMessageId?: string;
+  olderMessages: OlderMessages;
 }
 
 export function MessageList({
@@ -28,6 +38,7 @@ export function MessageList({
   messages,
   isGroup,
   highlightedMessageId,
+  olderMessages,
 }: MessageListProps) {
   const { userMap } = useUsers();
   const setReplyToId = useChatStore((s) => s.setReplyToId);
@@ -61,7 +72,7 @@ export function MessageList({
 
   const { hasNewMessagesBelow, handleScroll, scrollToBottom } = useAutoScroll({
     containerRef,
-    totalItems: rows.length,
+    newestKey: rows.at(-1)?.id,
     contentHeight: virtualizer.getTotalSize(),
     onScrollToBottom: () => {
       if (rows.length > 0) {
@@ -69,6 +80,29 @@ export function MessageList({
       }
     },
   });
+
+  // prepending older rows would push the view down; restore the same distance
+  // from the bottom so the reader stays on the message they were looking at
+  const distanceFromBottomRef = useRef<number | null>(null);
+  const oldestKey = messages[0]?.id;
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    const distance = distanceFromBottomRef.current;
+    if (!el || distance === null || !oldestKey) return;
+    el.scrollTop = el.scrollHeight - distance;
+    distanceFromBottomRef.current = null;
+  }, [oldestKey]);
+
+  const handleListScroll = () => {
+    handleScroll();
+    const el = containerRef.current;
+    const { hasMore, isLoading, load } = olderMessages;
+    if (!el || !hasMore || isLoading) return;
+    if (el.scrollTop > LOAD_OLDER_THRESHOLD_PX) return;
+    distanceFromBottomRef.current = el.scrollHeight - el.scrollTop;
+    load();
+  };
 
   const handleScrollToMessage = (id: string) => {
     const index = rows.findIndex(
@@ -92,11 +126,19 @@ export function MessageList({
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <div
         ref={containerRef}
-        onScroll={handleScroll}
+        onScroll={handleListScroll}
         role="log"
         aria-label="Messages"
         className="flex-1 overflow-y-auto bg-muted/40 px-2 py-4 md:px-12"
       >
+        {olderMessages.isLoading && (
+          <div className="absolute inset-x-0 top-2 z-10 flex justify-center">
+            <Loader2
+              className="size-4 animate-spin text-muted-foreground"
+              aria-label="Loading older messages"
+            />
+          </div>
+        )}
         <div
           style={{
             height: `${virtualizer.getTotalSize()}px`,
